@@ -14,10 +14,10 @@ using namespace std;
 // Instantiation of Doc class from rapidcsv
 rapidcsv::Document doc("books.csv");
 
-class BookInventory {
+class BookInformation {
 public:
-    // ADD CLASS CONSTRUCTOR
-    BookInventory(string input) {
+    // Class constructor
+    BookInformation(string input) {
         titleOrISBN = input;
         setAllVectors();
         setAllBookValues();
@@ -52,6 +52,7 @@ public:
             cout << "Title: " << getTitle() << endl;
             cout << "Author: " << getAuthor() << endl;
             cout << "Year of Publication: " << getYearOfPub() << endl;
+            cout << endl;
         }
     }
 

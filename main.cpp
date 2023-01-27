@@ -5,15 +5,17 @@
 */
 
 #include <iostream>
-#include <vector>
-#include <algorithm>
 #include "header.h"
 using namespace std;
 
 int main() {
 
 // Example 1
-    BookInventory obj1("The Giver");
-    obj1.Display();
+    BookInformation book1("The Giver");
+    book1.Display();
+
+// Example 2
+    BookInformation book2("The Price of Salt");
+    book2.Display();
 
 };
