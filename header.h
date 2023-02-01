@@ -97,23 +97,16 @@ private:
         vTitle = doc.GetColumn<string>("Book-Title");
         vAuthor = doc.GetColumn<string>("Book-Author");
         vYearOfPub = doc.GetColumn<string>("Year-Of-Publication");
-        // vPublisher
+        // vPublisher new object "pub" (includes parameters for GetCell method)
         rapidcsv::Document pub("books.csv", rapidcsv::LabelParams(0, 0));
         for (int i = 0; i < vISBN.size(); i++) {
             try {
-                vPublisher[i] = pub.GetCell<string>("Publisher", vISBN[i]);
+                vPublisher.push_back(pub.GetCell<string>("Publisher", vISBN[i]));
             }
             catch (out_of_range& orr) {
-                vPublisher[i] = "Not available ";
+                vPublisher.push_back("Not available");
             }
         }
-        
-        /*
-            catch (out_of_range& orr) {
-                // Something here
-            }
-        }
-        */
     }
 
     int BookInformation::findIndexNum() {

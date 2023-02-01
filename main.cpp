@@ -15,7 +15,7 @@ int main() {
     book1.Display();
 
 // Example 2
-    BookInformation book2("The Price of Salt");
+    BookInformation book2("Introducing Nietzsche (Foundations in Children's Ministry)");
     book2.Display();
 
 };
