@@ -46,6 +46,10 @@ public:
         return yearOfPub;
     }
 
+    string getPublisher() {
+        return bookPublisher;
+    }
+
     void Display();
 
 private:
@@ -57,7 +61,6 @@ private:
     vector<string> vAuthor;
     vector<string> vYearOfPub;
     vector<string> vPublisher;
-    vector<int> vErrors;
     string ISBN;
     string bookTitle;
     string bookAuthor;
@@ -84,6 +87,7 @@ private:
             cout << "Title: " << getTitle() << endl;
             cout << "Author: " << getAuthor() << endl;
             cout << "Year of Publication: " << getYearOfPub() << endl;
+            cout << "Publisher: " << getPublisher() << endl;
             cout << endl;
         }
     }
@@ -93,12 +97,21 @@ private:
         vTitle = doc.GetColumn<string>("Book-Title");
         vAuthor = doc.GetColumn<string>("Book-Author");
         vYearOfPub = doc.GetColumn<string>("Year-Of-Publication");
-        /*
-        try {
-            vPublisher = doc.GetColumn<string>("Publisher");
+        // vPublisher
+        rapidcsv::Document pub("books.csv", rapidcsv::LabelParams(0, 0));
+        for (int i = 0; i < vISBN.size(); i++) {
+            try {
+                vPublisher[i] = pub.GetCell<string>("Publisher", vISBN[i]);
+            }
+            catch (out_of_range& orr) {
+                vPublisher[i] = "Not available ";
+            }
         }
-        catch(out_of_range& orr) {
-            vErrors.push_back(orr);
+        
+        /*
+            catch (out_of_range& orr) {
+                // Something here
+            }
         }
         */
     }
@@ -132,12 +145,14 @@ private:
             bookTitle = "Not found ";
             bookAuthor = "Not found ";
             yearOfPub = "Not found ";
+            bookPublisher = "Not found ";
         }
         else {
             ISBN = vISBN[index];
             bookTitle = vTitle[index];
             bookAuthor = vAuthor[index];
             yearOfPub = vYearOfPub[index];
+            bookPublisher = vPublisher[index];
         }
     };
 
