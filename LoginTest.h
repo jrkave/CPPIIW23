@@ -32,8 +32,6 @@ void createNewAccount(string file_name, string user_name, string pass_word) {
 	myFile.close();
 
 	cout << "Thank you for creating an account with us." << endl;
-
-
 }
 
 // Search csv file for user information

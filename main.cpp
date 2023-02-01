@@ -66,7 +66,7 @@ int main() {
 		}
 	}
 
-    // Welcome Part 2 Message
+    // Prompts for finding book entry
     cout << endl;
     cout << "Shortly, you will be prompted to input a book's title or ISBN." << endl;
     cout << "If your book is in our system, we will return the following information: " << endl;
