@@ -13,6 +13,7 @@ int main() {
   // Login functionality
   int input;
   string username, password;
+  char promptChoice;
 
   cout << "Welcome to our book information program!" << endl;
   cout << "To get started, please enter 1 to login, or 2 to create an account. " << endl;
@@ -47,13 +48,13 @@ int main() {
   cout << endl;
 
   // Creates instance of class using title
-  BookInformation book1(title);
+  BookInventory book1(title);
   book1.Display();
 
   // Continue prompt
   char quitProgram = ' ';
   while (quitProgram != 'q') {
-    cout << "Would you like to quit? Enter q for quit, or any other letter to continue. " << endl;
+    cout << "Would you like to stop entering books? Enter q for quit, or any other letter to continue. " << endl;
     cin >> quitProgram;
     if (quitProgram == 'q') {
       break;
@@ -64,9 +65,29 @@ int main() {
       getline(cin, title);
       cout << "Retrieving book information..." << endl;
       cout << endl;
-      BookInformation book1(title);
+      BookInventory book1(title);
       book1.Display();
       continue;
     }
   }
+
+  // Adding books
+  cout << endl;
+  cout << "Would you like to add a book to the inventory? Enter y/n." << endl;
+  cin >> promptChoice;
+  while (promptChoice != 'y' && promptChoice != 'n') {
+    cout << "Invalid entry. Please type 'y' for yes, 'n' for no. " << endl;
+    cin >> promptChoice;
+  }
+  if (promptChoice == 'y') {
+    // Prompt for title
+    string addTitle;
+    cout << "Please input the title of your book: " << endl;
+    cin.ignore();
+    getline(cin, addTitle);
+    cout << endl;
+    book1.addBook(addTitle);
+  }
+
 }
+
