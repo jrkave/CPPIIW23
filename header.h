@@ -1,28 +1,20 @@
-/* 
-*   Filename: header.h
-*   Date: Jan. 26, 2023
-*   Author(s): Veenkamp, Brooks, James
-*/
-
 #include <iostream>
-#include <vector>
-#include <string>
-#include <stdexcept>
-#include "rapidcsv.h"
+#include <fstream>
+#include <deque>
+#include "json.hpp"
 
 #ifndef HEADER_H_
 #define HEADER_H_
-using namespace std;
 
-// Instantiation of Doc class from rapidcsv
-rapidcsv::Document doc("books.csv");
+using namespace std;
+using json = nlohmann::json;
 
 class BookInformation {
 public:
     // Class constructor
     BookInformation(string input) {
-        titleOrISBN = input;
-        setAllVectors();
+        inputTitle = input;
+        setAllDeques();
         setAllBookValues();
     }
 
@@ -52,37 +44,36 @@ public:
 
     void Display();
 
+
 private:
-    // Class variables
-    int myIndex = 0;
-    string titleOrISBN;
-    vector<string> vISBN;
-    vector<string> vTitle;
-    vector<string> vAuthor;
-    vector<string> vYearOfPub;
-    vector<string> vPublisher;
+    string inputTitle;
+    deque<string> isbns;
+    deque<string> titles;
+    deque<string> authors;
+    deque<string> years;
+    deque<string> publishers;
     string ISBN;
     string bookTitle;
     string bookAuthor;
     string yearOfPub;
     string bookPublisher;
 
-    // Setter for vectors (ISBN, Book-Title, Book-Author, Year-Of-Publication) using rapidcsv
-    void setAllVectors();
+    // Setter for all deques
+    void setAllDeques();
 
     // Finds index number of title or ISBN if it exists
     int findIndexNum();
 
-    // Setter for ISBN, Title, Author, Year of Publication
+    // Setters for ISBN, Title, Author, Year of Publication, Publisher
     void setAllBookValues();
-
 };
 
     void BookInformation::Display() {
-        if (getISBN() == "Not found ") {
-            cout << "Invalid entry or book not found. Please try again. " << endl;
+        if (getTitle() == "Not found") {
+            cout << "Invalid entry or book not found." << endl;
         }
         else {
+            cout << endl;
             cout << "ISBN: " << getISBN() << endl;
             cout << "Title: " << getTitle() << endl;
             cout << "Author: " << getAuthor() << endl;
@@ -92,61 +83,60 @@ private:
         }
     }
 
-    void BookInformation::setAllVectors() {
-        vISBN = doc.GetColumn<string>("ISBN");
-        vTitle = doc.GetColumn<string>("Book-Title");
-        vAuthor = doc.GetColumn<string>("Book-Author");
-        vYearOfPub = doc.GetColumn<string>("Year-Of-Publication");
-        // vPublisher new object "pub" (includes parameters for GetCell method)
-        rapidcsv::Document pub("books.csv", rapidcsv::LabelParams(0, 0));
-        for (int i = 0; i < vISBN.size(); i++) {
+    void BookInformation::setAllDeques() {
+        // Open JSON file
+        ifstream json_file("book.json");
+
+        // Parse JSON data
+        json data;
+        json_file >> data;
+
+
+        // Catching Errors
+        for (int i = 0; i < data.size(); i++) {
             try {
-                vPublisher.push_back(pub.GetCell<string>("Publisher", vISBN[i]));
-            }
-            catch (out_of_range& orr) {
-                vPublisher.push_back("Not available");
+                const auto& book = data[i];
+                string isbn = book["isbn"];
+                string title = book["title"];
+                string author = book["author"];
+                string year = book["year"];
+                string publisher = book["publisher"];
+                isbns.push_back(isbn);
+                titles.push_back(title);
+                authors.push_back(author);
+                years.push_back(year);
+                publishers.push_back(publisher);
+            } catch(exception e) {
+                cout << "err" << endl;
             }
         }
     }
 
     int BookInformation::findIndexNum() {
-        // Finds index if key is an ISBN
-        if (isdigit(titleOrISBN[0])) {
-            vector<string>::iterator itr = find(vISBN.begin(), vISBN.end(), titleOrISBN);
-            if (itr != vISBN.cend()) {
-                return distance(vISBN.begin(), itr);
-            }
-            else {
-                return 0;
-            }
-            // Finds index if key is a title
-        } else {
-            vector<string>::iterator itr2 = find(vTitle.begin(), vTitle.end(), titleOrISBN);
-            if (itr2 != vTitle.cend()) {
-                return distance(vTitle.begin(), itr2);
-            }
-            else {
-                return 0;
+        // Iterate over titles vector
+        for (int i = 0; i < titles.size(); i++) {
+            if (titles[i] == inputTitle) {
+                return i;
             }
         }
+        return -1;
     }
 
     void BookInformation::setAllBookValues() {
         int index = findIndexNum();
-        if (index == 0) {
-            ISBN = "Not found ";
-            bookTitle = "Not found ";
-            bookAuthor = "Not found ";
-            yearOfPub = "Not found ";
-            bookPublisher = "Not found ";
+        if (index == -1) {
+            ISBN = "Not found";
+            bookTitle = "Not found";
+            bookAuthor = "Not found";
+            yearOfPub = "Not found";
+            bookPublisher = "Not found";
+        } else {
+            ISBN = isbns[index];
+            bookTitle = titles[index];
+            bookAuthor = authors[index];
+            yearOfPub = years[index];
+            bookPublisher = publishers[index];
         }
-        else {
-            ISBN = vISBN[index];
-            bookTitle = vTitle[index];
-            bookAuthor = vAuthor[index];
-            yearOfPub = vYearOfPub[index];
-            bookPublisher = vPublisher[index];
-        }
-    };
+    }
 
 #endif /* HEADER_H_ */

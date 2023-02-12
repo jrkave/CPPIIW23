@@ -1,104 +1,72 @@
-/* 
-*   Filename: main.cpp
-*   Date: Jan. 26, 2023
-*   Author(s): Veenkamp, Brooks, James
-*/
-
 #include <iostream>
-#include "LoginTest.h"
+#include <fstream>
+#include <string>
 #include "header.h"
+#include "login.h"
+#include "json.hpp"
+
 using namespace std;
+using json = nlohmann::json;
 
 int main() {
 
-    cout << "Welcome to our book information program!" << endl;
-    cout << "Please enter 1 to login, or 2 to create an account." << endl;
-	cin >> loginChoice;
-	// Ensure that loginChoice is a number
-	while(validInput(loginChoice) == false) {
-		cout << "Invalid selection. Please enter 1 to login, or 2 to create an account." << endl;
-		cin.clear();
-		cin >> loginChoice;
-		continue;
-	}
-	// Convert validated input to integer
-	loginNumber = stoi(loginChoice);
-	// Select login or new user
-	while(loginNumber != 0){
-		switch(loginNumber){
-		// Returning user login
-		case 1:
-		    cout << "Enter username: ";
-		    cin >> username;
-		    cout << "Enter password: ";
-		    cin >> password;
-		    //Greet user on success, or allow them to make a new selection upon failure
-		    if (returningUserLogin(username, password)) {
-		        cout << "Welcome back, " << username << "." << endl;
-		    }
-		    else {
-		        cout << "Incorrect username or password. Please enter 1 to login, or 2 to create an account." << endl;
-		        cin.clear();
-		        cin >> loginNumber;
-		        break;
-		    }
-		    cin.clear();
-		    loginNumber = 0;
-		    break;
-		// New user account creation
-		case 2:
-			cout << "Create a username: ";
-			cin >> nUsername;
-			cout << "Create a password: ";
-			cin >> nPassword;
-			// Write new user info to login.csv
-			createNewAccount(CSVfilename, nUsername, nPassword);
-			cin.clear();
-			loginNumber = 0;
-			break;
-		// If user did not enter 1 or 2
-		default:
-			cout << "Invalid selection. Please enter 1 to login, or 2 to create an account." << std::endl;
-			cin.clear();
-			loginNumber = 0;
-			cin >> loginNumber;
-			break;
-		}
-	}
+  // Login functionality
+  int input;
+  string username, password;
 
-    // Prompts for finding book entry
-    cout << endl;
-    cout << "Shortly, you will be prompted to input a book's title or ISBN." << endl;
-    cout << "If your book is in our system, we will return the following information: " << endl;
-    cout << "ISBN, Title, Author, Year of Publication, and Publisher. " << endl;
-    cout << endl;
-
-    // User input
-    string input;
-    cout << "Please enter a book's title or ISBN number: " << endl;
+  cout << "Welcome to our book information program!" << endl;
+  cout << "To get started, please enter 1 to login, or 2 to create an account. " << endl;
+  cin >> input;
+  // Validate input
+  while (input != 1 && input != 2) {
+    cout << "Invalid input. Please enter 1 to login, or 2 to create an account. " << endl;
     cin >> input;
-    cout << "Retrieving book information..." << endl;
-    cout << endl;
+  }
+  
+  cout << "Please enter a username: " << endl;
+  cin >> username;
+  cout << "Please enter a password: " << endl;
+  cin >> password;
 
-    // Create instance of class BookInformation using input
-    BookInformation book1(input);
-    book1.Display();
+  // Create instance of login class
+  Login log1(input, username, password);
 
-    // Continue prompt
-    char quitProgram = ' ';
-    while (quitProgram != 'q') {
-        cout << "Would you like to quit? Enter q for quit, and any other letter to continue. " << endl;
-        cin >> quitProgram;
-        if (quitProgram == 'q') {
-            break;
-        }
-        else {
-            cout << "Please enter a book's title or ISBN number: " << endl;
-            cin >> input;
-            cout << "Retrieving book information..." << endl;
-            cout << endl;
-            BookInformation book1(input);
-            book1.Display();
-        }
+  // Retrieving book information
+  cout << endl;
+  cout << "Shortly, you will be prompted to input a book's title." << endl;
+  cout << "If your book is in our system, we will return the following information: " << endl;
+  cout << "ISBN, Title, Author, Year of Publication, and Publisher. " << endl;
+  cout << endl;
+
+  // User input
+  string title;
+  cout << "Please enter a book title: " << endl;
+  cin.ignore();
+  getline(cin, title);
+  cout << "Retrieving book information... " << endl;
+  cout << endl;
+
+  // Creates instance of class using title
+  BookInformation book1(title);
+  book1.Display();
+
+  // Continue prompt
+  char quitProgram = ' ';
+  while (quitProgram != 'q') {
+    cout << "Would you like to quit? Enter q for quit, or any other letter to continue. " << endl;
+    cin >> quitProgram;
+    if (quitProgram == 'q') {
+      break;
     }
-};
+    else {
+      cout << "Please enter a book title: " << endl;
+      cin.ignore();
+      getline(cin, title);
+      cout << "Retrieving book information..." << endl;
+      cout << endl;
+      BookInformation book1(title);
+      book1.Display();
+      continue;
+    }
+  }
+}
