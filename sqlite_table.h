@@ -1,3 +1,9 @@
+/*
+*  Filename: sqlite_table.h
+*  Created on: February 13, 2023
+*  Author: Julia Veenkamp
+*/
+
 #include "sqlite3.h"
 #include <iostream>
 #include <vector>

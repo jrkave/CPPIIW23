@@ -1,4 +1,8 @@
-// main.cpp
+/*
+*  Filename: main.cpp
+*  Created on: January 2023
+*  Authors: Veenkamp, Brooks, James
+*/
 
 #include <iostream>
 #include <fstream>
