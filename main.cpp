@@ -12,6 +12,23 @@ using json = nlohmann::json;
 
 int main() {
 
+/*
+  // Open database
+  sqlite3 *db;
+  int rc;
+  rc = sqlite3_open("test.db", &db);
+  if (rc) {
+    fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    return 1;
+  } else {
+    fprintf(stderr, "Opened database successfully\n");
+  }
+
+  // Create table and insert data 
+  create_table(db);
+  insert_orig_data(db);
+*/
+
   // Login functionality
   int input;
   string username, password;
@@ -72,24 +89,6 @@ int main() {
       continue;
     }
   }
-
-
-  // Open database
-  sqlite3 *db;
-  int rc;
-  rc = sqlite3_open("test.db", &db);
-  if (rc) {
-    fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-    return 1;
-  } else {
-    fprintf(stderr, "Opened database successfully\n");
-  }
-
-  // Create table and insert data 
-  create_table(db);
-  // TO DO: figure out a faster way to insert data; current method would take ~10 hours.
-  //insert_data(db);
-
 
   // Adding books
   cout << endl;

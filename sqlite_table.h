@@ -34,60 +34,62 @@ int create_table(sqlite3 *db) {
     return 0;
 }
 
+// Modify vectors prior to data insertion
+    vector<string> avec = book.modifyVector(book.getAuthorsVec());
+    vector<string> pvec = book.modifyVector(book.getPublisherVec());
+    vector<string> tvec = book.modifyVector(book.getTitleVec());
+
+// Insertion of data to db
 int insert_data(sqlite3 *db) {
     char *zErrMsg = 0;
     int rc;
-    char sql[500];
+    sqlite3_stmt *stmt;
+    const char *sql;
 
-    for (int i = 1; i < book.getTitleVec().size(); i++) {
-        if (i % 1000 == 0) {
-            cout << "1000 records inserted into database. Continuing... " << endl;
-        }
-        if (i == 67840) {
-            cout << "25% complete." << endl;
-        }
-        // Handling apostrophes for author, publisher, title
-        string title = book.getTitleVec()[i];
-        string::iterator it = title.begin();
-        while (it != title.end()) {
-            if (*it == '\'') {
-                it = title.insert(it, '\'');
-                it++; // Advance past inserted character
-            }
-            it++; // Advance to next character
-        }
-        string author = book.getAuthorsVec()[i];
-        it = author.begin();
-        while (it != author.end()) {
-            if (*it == '\'') {
-                it = author.insert(it, '\'');
-                it++;
-            }
-            it++;
-        }
-        string publisher = book.getPublisherVec()[i];
-        it = publisher.begin();
-        while (it != publisher.end()) {
-            if (*it == '\'') {
-                it = publisher.insert(it, '\'');
-                it++;
-            }
-            it++;
-        }
-        // Create SQL statement
-        snprintf(sql, sizeof(sql), "INSERT INTO BOOKINVENTORY (ISBN,TITLE,AUTHOR,YEAR,PUBLISHER) " \
-                      "VALUES ('%s', '%s', '%s', '%s', '%s');",
-                      book.getISBNVec()[i].c_str(), title.c_str(), author.c_str(), book.getYearVec()[i].c_str(), publisher.c_str());
+    sql = "INSERT INTO BOOKINVENTORY (ISBN,TITLE,AUTHOR,YEAR,PUBLISHER) " \
+          "VALUES (?,?,?,?,?)";
 
-        /* Execute SQL statement */
-        rc = sqlite3_exec(db, sql, 0, 0, &zErrMsg);
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+        return rc;
+    }
 
-        if( rc != SQLITE_OK ){
-            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
+    // Begin transaction
+    sqlite3_exec(db, "BEGIN TRANSACTION;", NULL, NULL, &zErrMsg);
+
+    int count = 2;
+    for (int i = 1; i < book.getISBNVec().size(); i++) {
+        if (i % 5427 == 0) {
+            cout << count << "% complete. Continuing... " << endl;
+            count += 2;
+        }
+
+        // Bind parameters to prepared statement
+        sqlite3_bind_text(stmt, 1, book.getISBNVec()[i].c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, tvec[i].c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, avec[i].c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 4, book.getYearVec()[i].c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 5, pvec[i].c_str(), -1, SQLITE_TRANSIENT);
+
+        // Execute prepared statement
+        rc = sqlite3_step(stmt);
+        if( rc != SQLITE_DONE ){
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
             return rc;
         }
+
+        // Reset prepared statement
+        sqlite3_reset(stmt);
     }
+
+    // Finalize prepared statement
+    sqlite3_finalize(stmt);
+
+    // Commit transaction
+    sqlite3_exec(db, "COMMIT TRANSACTION;", NULL, NULL, &zErrMsg);
+
     fprintf(stdout, "Data inserted successfully\n");
     return 0;
 };
+

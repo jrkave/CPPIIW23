@@ -75,6 +75,9 @@ public:
     // Display function
     void Display();
 
+    // Modify vectors to add apostrophes (for SQLite handling)
+    vector<string> modifyVector(vector<string> updaateVector);
+
 private:
     string inputTitle;
     vector<string> isbns;
@@ -99,6 +102,7 @@ private:
 
     // Helper method for addBooks; checks what user wants to input for book details
     vector<string> bookDetails(string title);
+
 };
 
     // Stores information about what user knows about book (helper method for addBook)
@@ -229,6 +233,17 @@ private:
             yearOfPub = years[index];
             bookPublisher = publishers[index];
         }
+    }
+
+    // Modifying vectors to prep for insertion into SQLite
+    vector<string> BookInventory::modifyVector(vector<string> updateVector) {
+        for (int i = 0; i < updateVector.size(); i++) {
+            if (updateVector[i].find("'") != std::string::npos) {
+                int pos = updateVector[i].find("'");
+                updateVector[i].insert(pos+1, "'");
+            }
+        }
+        return updateVector;
     }
 
 #endif /* HEADER_H_ */
