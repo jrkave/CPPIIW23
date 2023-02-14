@@ -52,6 +52,13 @@ private:
 		    cerr << "Failed to open file " << CSVfilename << endl;
 		    return;
 	    }
+	    plainPassword = password;
+	    for(int i =0; i < plainPassword.length(); i++) {
+	    	ch = plainPassword.at(i);
+	    	int a = (int) ch;
+	    	string b = to_string(a);
+	    	encryptedPassword.append(b);
+	    }
 	    // Write username and password delimited by comma
 	    myFile << username << "," << password << endl;
 	    myFile.close();
@@ -72,8 +79,14 @@ private:
             int delimiterPos = line.find(',');
             string storedUsername = line.substr(0, delimiterPos);
             string storedPassword = line.substr(delimiterPos + 1);
-
-            if (username == storedUsername && password == storedPassword) {
+            //Run input password through encryption
+    	    for(int i =0; i < password.length(); i++) {
+    	    	ch = password.at(i);
+    	    	int a = (int) ch;
+    	    	string b = to_string(a);
+    	    	encryptedPassword.append(b);
+    	    }
+            if (username == storedUsername && encryptedPassword == storedPassword) {
                 file.close();
                 cout << "Welcome back, " << username << "." << endl;
                 return true;
