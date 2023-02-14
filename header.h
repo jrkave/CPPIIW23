@@ -1,7 +1,9 @@
+// header.h
+
 #include <iostream>
 #include <fstream>
 #include <deque>
-#include <map>
+#include <vector>
 #include "json.hpp"
 
 #ifndef HEADER_H_
@@ -13,34 +15,55 @@ using json = nlohmann::json;
 class BookInventory {
 public:
     // Class constructor
+    BookInventory() {
+        setAllVectors();
+        setAllBookValues();
+    }
+    // Overloaded constructor
     BookInventory(string input) {
         inputTitle = input;
-        setAllDeques();
+        setAllVectors();
         setAllBookValues();
     }
 
-    // Getter for ISBN
+    // Getters for ISBN
+    vector<string> getISBNVec() {
+        return isbns;
+    }
     string getISBN() {
         return ISBN;
     }
 
-    // Getter for Title
+    // Getters for Title
     string getTitle() {
         return bookTitle;
     }
+    vector<string> getTitleVec() {
+        return titles;
+    }
 
-    // Getter for Author
+    // Getters for Author
     string getAuthor() {
         return bookAuthor;
     }
+    vector<string> getAuthorsVec() {
+        return authors;
+    }
 
-    // Getter for Year of Publication
+    // Getters for Year of Publication
     string getYearOfPub() {
         return yearOfPub;
     }
+    vector<string> getYearVec() {
+        return years;
+    }
 
+    // Getters for Publisher
     string getPublisher() {
         return bookPublisher;
+    }
+    vector<string> getPublisherVec() {
+        return publishers;
     }
 
     // Add book to inventory
@@ -54,19 +77,19 @@ public:
 
 private:
     string inputTitle;
-    deque<string> isbns;
-    deque<string> titles;
-    deque<string> authors;
-    deque<string> years;
-    deque<string> publishers;
+    vector<string> isbns;
+    vector<string> titles;
+    vector<string> authors;
+    vector<string> years;
+    vector<string> publishers;
     string ISBN;
     string bookTitle;
     string bookAuthor;
     string yearOfPub;
     string bookPublisher;
 
-    // Setter for all deques
-    void setAllDeques();
+    // Setter for all vectors
+    void setAllVectors();
 
     // Finds index number of title or ISBN if it exists
     int findIndexNum();
@@ -82,10 +105,8 @@ private:
     vector<string> BookInventory::bookDetails(string title) {
         cout << "Please provide more information about the book you wish to add. " << endl;
         cout << "If you do not know a value, enter 'na'." << endl;
-
         // TO DO: VALIDATE YEAR, ISBN 
         // Input values
-
         cout << "ISBN: " << endl;
         cin >> ISBN;
         cout << "Author: " << endl;
@@ -131,17 +152,13 @@ private:
             cout << "The book with title \"" << delTitle << "\" was not found." << endl;
             return;
         }
-        // If title does exist, remove values from deque
-        // Test
-        cout << isbns.back() << endl;
+        // If title does exist, remove values from vector
         isbns.erase(isbns.begin() + index);
-        // Test
-        cout << isbns.back() << endl;
         authors.erase(authors.begin() + index);
         publishers.erase(publishers.begin() + index);
         titles.erase(titles.begin() + index);
         years.erase(years.begin() + index);
-        cout << "The book with title \"" << delTitle << "\" was removed from the inventory. " << endl;
+        cout << "\"" << delTitle << "\" was removed from the inventory. " << endl;
     }
 
     void BookInventory::Display() {
@@ -159,14 +176,13 @@ private:
         }
     }
 
-    void BookInventory::setAllDeques() {
+    void BookInventory::setAllVectors() {
         // Open JSON file
         ifstream json_file("book.json");
 
         // Parse JSON data
         json data;
         json_file >> data;
-
 
         // Catching Errors
         for (int i = 0; i < data.size(); i++) {
@@ -182,7 +198,7 @@ private:
                 authors.push_back(author);
                 years.push_back(year);
                 publishers.push_back(publisher);
-            } catch(exception e) {
+            } catch(exception *e) {
                 cout << "err" << endl;
             }
         }
@@ -214,6 +230,5 @@ private:
             bookPublisher = publishers[index];
         }
     }
-
 
 #endif /* HEADER_H_ */

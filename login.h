@@ -42,8 +42,6 @@ private:
     // Verify returning user
     bool returningUserLogin(string username, string password);
 
-    void performLoginOperations(int number);
-
 };
 
     void Login::createNewAccount(string username, string password) {

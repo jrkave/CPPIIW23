@@ -1,9 +1,11 @@
+// main.cpp
+
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "header.h"
+#include "sqlite_table.h"
+//#include "header.h" // take out when sqlite_table.h starts working
 #include "login.h"
-#include "json.hpp"
 
 using namespace std;
 using json = nlohmann::json;
@@ -24,7 +26,7 @@ int main() {
     cin >> input;
   }
   
-  cout << "Please enter a username: " << endl;
+  cout << "Please enter a user name: " << endl;
   cin >> username;
   cout << "Please enter a password: " << endl;
   cin >> password;
@@ -71,6 +73,24 @@ int main() {
     }
   }
 
+
+  // Open database
+  sqlite3 *db;
+  int rc;
+  rc = sqlite3_open("test.db", &db);
+  if (rc) {
+    fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    return 1;
+  } else {
+    fprintf(stderr, "Opened database successfully\n");
+  }
+
+  // Create table and insert data 
+  create_table(db);
+  // TO DO: figure out a faster way to insert data; current method would take ~10 hours.
+  //insert_data(db);
+
+
   // Adding books
   cout << endl;
   cout << "Would you like to add a book to the inventory? Enter y/n." << endl;
@@ -87,6 +107,8 @@ int main() {
     getline(cin, addTitle);
     cout << endl;
     book1.addBook(addTitle);
+    // Remove added book
+    book1.removeBook(addTitle);
   }
 
 }
