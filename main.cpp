@@ -166,4 +166,9 @@ int main() {
     // Remove element from vector
     book1.removeFromVec(delTitle);
   }
+
+  // Make a list and display the list
+  book1.makeList();
+  book1.DisplayList();
+
 }

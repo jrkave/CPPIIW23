@@ -4,6 +4,7 @@
 #include <fstream>
 #include <deque>
 #include <vector>
+#include <list>
 #include <algorithm>
 #include "json.hpp"
 
@@ -96,7 +97,14 @@ public:
     // Modify vectors to add apostrophes (for SQLite handling)
     vector<string> modifyVector(vector<string> updateVector);
 
+    // Make a list for user of books they want to add
+    void makeList();
+
+    // Display user list
+    void DisplayList();
+
 private:
+    char toContinue;
     string inputTitle;
     vector<string> isbns;
     vector<string> titles;
@@ -105,6 +113,8 @@ private:
     vector<string> publishers;
     vector<string> genres;
     vector<string> descriptions;
+    list<list<string>> big;
+    list<string> small;
     string ISBN;
     string bookTitle;
     string bookAuthor;
@@ -121,6 +131,9 @@ private:
 
     // Finds index number of title if it exists
     int findIndexNum();
+
+    // Overloaded findIndexNum
+    int findIndexNum(string title);
 
     // Setters for ISBN, Title, Author, Year of Publication, Publisher, Genre, Description
     void setAllBookValues();
@@ -139,8 +152,6 @@ private:
             cout << "Publisher: " << getPublisher() << endl;
             cout << "Genre: " << getGenre() << endl;
             cout << "Description: " << getDescription() << endl;
-            cout << "Size of title vector: " << getTitleVec().size() << endl;
-            cout << "Size of genre vector: " << getGenreVec().size() << endl;
             cout << endl;
         }
     }
@@ -190,6 +201,15 @@ private:
         return -1;
     }
 
+    int BookInventory::findIndexNum(string title) {
+        for (int i = 0; i < titles.size(); i++) {
+            if (titles[i] == title) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     void BookInventory::setAllBookValues() {
         int index = findIndexNum();
         if (index == -1) {
@@ -226,6 +246,61 @@ private:
     // FIX ME: Segmentation fault if removing from last
     // Remove data from vector
     void BookInventory::removeFromVec(string delTitle) {
+        if (findIndexNum(delTitle) == (titles.size() - 1)) {
+            // If input title is last element from vector, delete it
+            isbns.pop_back();
+            titles.pop_back();
+            authors.pop_back();
+            years.pop_back();
+            publishers.pop_back();
+            genres.pop_back();
+            descriptions.pop_back();
+            cout << "Data removed succesfullly from vectors. " << endl;
+        }
+        else if (findIndexNum(delTitle) == -1 ) {
+            // If findIndex num returns -1, the book was not found in titles vector
+            cout << "Book not found. " << endl;
+        }
+        else {
+            // Erase elements by index
+            titles.erase(titles.begin() + findIndexNum(delTitle));
+            isbns.erase(isbns.begin() + findIndexNum(delTitle));
+            authors.erase(authors.begin() + findIndexNum(delTitle));
+            years.erase(years.begin() + findIndexNum(delTitle));
+            publishers.erase(titles.begin() + findIndexNum(delTitle));
+            genres.erase(isbns.begin() + findIndexNum(delTitle));
+            descriptions.erase(titles.begin() + findIndexNum(delTitle));
+        }
+    }
+
+    // Make a list of lists to store data user wants to append
+    void BookInventory::makeList() {
+        cout << "To make a list of books, please enter a title. We will check if it is in the database, and if it is, we will add it to your list. " << endl;
+        while (toContinue != 'q') {
+            cout << "Please enter a title. " << endl;
+            cin.ignore();
+            getline(cin, bookTitle);
+            if (findIndexNum(bookTitle) == -1) {
+                cout << "Book not found. " << endl;
+            }
+            // Add isbn, author, title to list
+            else {
+                small.push_back(isbns[findIndexNum(bookTitle)]);
+                small.push_back(titles[findIndexNum(bookTitle)]);
+                small.push_back(authors[findIndexNum(bookTitle)]);
+                // Add small list to big list (AKA list of lists)
+                big.push_back(small);
+                // "Big" looks like: [[ISBN, TITLE, AUTHOR], [ISBN, TITLE, AUTHOR], [ISBN, TITLE, AUTHOR]]
+                cout << "Successfullly added to list. " << endl;
+            }
+            cout << "Would you like to add another book? Enter 'q' to quit, or any other letter to continue. " << endl;
+            cin >> toContinue;
+        }
+    }
+
+    // Display List
+    void BookInventory::DisplayList() {
+        cout << "Fix me" << endl;
     }
 
     // Validate input for ISBN, Year
@@ -253,5 +328,6 @@ private:
         }
         return updateVector;
     }
+
 
 #endif /* HEADER_H_ */
