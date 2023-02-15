@@ -99,6 +99,7 @@ int insert_orig_data(sqlite3 *db) {
     return 0;
 }
 
+// Remove data
 int remove_data(sqlite3 *db, const char *title) {
     char *zErrMsg = 0;
     int rc;
@@ -154,40 +155,6 @@ int remove_data(sqlite3 *db, const char *title) {
     fprintf(stdout, "Data removed successfully\n");
     return SQLITE_OK;
 }
-
-/*
-// Remove by title
-int remove_data(sqlite3 *db, const char *title) {
-    char *zErrMsg = 0;
-    int rc;
-    sqlite3_stmt *stmt;
-    const char *sql;
-
-    sql = "DELETE FROM BOOKINVENTORY WHERE TITLE = ?";
-
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
-        return rc;
-    }
-
-    rc = sqlite3_bind_text(stmt, 1, title, -1, SQLITE_TRANSIENT);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to bind parameter: %s\n", sqlite3_errmsg(db));
-        return rc;
-    }
-
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-        fprintf(stderr, "Failed to execute query: %s\n", sqlite3_errmsg(db));
-        return rc;
-    }
-
-    sqlite3_finalize(stmt);
-    fprintf(stdout, "Data removed successfully\n");
-    return SQLITE_OK;
-}
-*/
 
 // Add to database
 int add_data(sqlite3 *db, const char *isbn, const char *title, const char *author, const char *year, const char *publisher, const char *genre, const char *description) {
