@@ -98,13 +98,14 @@ public:
     vector<string> modifyVector(vector<string> updateVector);
 
     // Make a list for user of books they want to add
-    void makeList();
+    int makeList();
 
     // Display user list
     void DisplayList();
 
 private:
     char toContinue;
+    int countItems;
     string inputTitle;
     vector<string> isbns;
     vector<string> titles;
@@ -113,8 +114,8 @@ private:
     vector<string> publishers;
     vector<string> genres;
     vector<string> descriptions;
-    list<list<string>> big;
-    list<string> small;
+    vector<vector<string>> big;
+    vector<string> small;
     string ISBN;
     string bookTitle;
     string bookAuthor;
@@ -274,7 +275,7 @@ private:
     }
 
     // Make a list of lists to store data user wants to append
-    void BookInventory::makeList() {
+    int BookInventory::makeList() {
         cout << "To make a list of books, please enter a title. We will check if it is in the database, and if it is, we will add it to your list. " << endl;
         while (toContinue != 'q') {
             cout << "Please enter a title. " << endl;
@@ -285,22 +286,31 @@ private:
             }
             // Add isbn, author, title to list
             else {
+                countItems += 1;
                 small.push_back(isbns[findIndexNum(bookTitle)]);
                 small.push_back(titles[findIndexNum(bookTitle)]);
                 small.push_back(authors[findIndexNum(bookTitle)]);
-                // Add small list to big list (AKA list of lists)
-                big.push_back(small);
-                // "Big" looks like: [[ISBN, TITLE, AUTHOR], [ISBN, TITLE, AUTHOR], [ISBN, TITLE, AUTHOR]]
                 cout << "Successfullly added to list. " << endl;
             }
             cout << "Would you like to add another book? Enter 'q' to quit, or any other letter to continue. " << endl;
             cin >> toContinue;
         }
+        big.push_back(small);
+        return countItems;
     }
 
     // Display List
     void BookInventory::DisplayList() {
-        cout << "Fix me" << endl;
+        // Iterate through the outer list and print the values of the inner lists
+        for (auto outer_it = big.begin(); outer_it != big.end(); ++outer_it) {
+            // Iterate through the inner list and print its values, skipping the first element
+            for (auto inner_it = outer_it->begin(); inner_it != outer_it->end(); ++inner_it) {
+                cout << *inner_it << " ";
+            }
+            cout << endl;
+        cout << endl;
+        }
+        cout << "Total items: " << makeList() << endl;
     }
 
     // Validate input for ISBN, Year
