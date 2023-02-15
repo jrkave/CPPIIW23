@@ -22,11 +22,12 @@ int main() {
     fprintf(stderr, "Opened database successfully\n");
   }
 
-/* Note: test.db exists and is already populated with 5,000 records 
+
+  /* Commented out because test.db already exists and is populated
   // Create table and insert data
   create_table(db);
   insert_orig_data(db);
-*/
+  */
 
   // Login functionality
   int input;
@@ -106,6 +107,7 @@ int main() {
 
     // Obtain user input
     string addISBN, addTitle, addAuthor, addYear, addPublisher, addGenre, addDescription;
+    cin.ignore();
     cout << "Enter ISBN: " << endl;
     getline(cin, addISBN);
     // Validate ISBN
@@ -146,7 +148,7 @@ int main() {
   }
 
   // Remove a book
-  string delTitle; 
+  string delTitle;
   cout << endl;
   cout << "Would you like to remove a book to the inventory? Enter y/n." << endl;
   cin >> promptChoice;
