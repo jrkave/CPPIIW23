@@ -156,7 +156,7 @@ int remove_data(sqlite3 *db, const char *title) {
     return SQLITE_OK;
 }
 
-// Add to database
+// Add data
 int add_data(sqlite3 *db, const char *isbn, const char *title, const char *author, const char *year, const char *publisher, const char *genre, const char *description) {
     string query = "INSERT INTO BOOKINVENTORY (ISBN, TITLE, AUTHOR, YEAR, PUBLISHER, GENRE, DESCRIPTION) VALUES ('";
     query += string(isbn) + "', '" + string(title) + "', '" + string(author) + "', '" + string(year) + "', '" + string(publisher) + "', '" + string(genre) + "', '" + string(description) + "')";
