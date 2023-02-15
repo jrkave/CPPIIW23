@@ -1,14 +1,9 @@
-/*
-*  Filename: main.cpp
-*  Created on: January 2023
-*  Authors: Veenkamp, Brooks, James
-*/
+// main.cpp
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include "sqlite_table.h"
-//#include "header.h" // take out when sqlite_table.h starts working
 #include "login.h"
 
 using namespace std;
@@ -16,7 +11,6 @@ using json = nlohmann::json;
 
 int main() {
 
-/*
   // Open database
   sqlite3 *db;
   int rc;
@@ -28,7 +22,8 @@ int main() {
     fprintf(stderr, "Opened database successfully\n");
   }
 
-  // Create table and insert data 
+/* Note: test.db exists and is already populated with 5,000 records 
+  // Create table and insert data
   create_table(db);
   insert_orig_data(db);
 */
@@ -84,7 +79,7 @@ int main() {
     }
     else {
       cout << "Please enter a book title: " << endl;
-      cin.ignore();
+      cin.clear();
       getline(cin, title);
       cout << "Retrieving book information..." << endl;
       cout << endl;
@@ -103,16 +98,66 @@ int main() {
     cin >> promptChoice;
   }
   if (promptChoice == 'y') {
-    // Prompt for title
-    string addTitle;
-    cout << "Please input the title of your book: " << endl;
-    cin.ignore();
+    // Prompts to direct user on adding data
+    cout << "To add a book, we need to gather some additional information. " << endl;
+    cout << "We will need your book's ISBN, Title, Author, Year of Publication, Publisher, Genre, and Description. " << endl;
+    cout << "If you do not know a value, please type 'Unknown'." << endl;
+    cout << "Additionally, please note that the ISBN and year entered (unless entering 'Unknown') must be 13-digit and 4-digit numbers, respectively." << endl;
+
+    // Obtain user input
+    string addISBN, addTitle, addAuthor, addYear, addPublisher, addGenre, addDescription;
+    cout << "Enter ISBN: " << endl;
+    getline(cin, addISBN);
+    // Validate ISBN
+    if (addISBN != "Unknown" && addISBN != "unknown") {
+      while (validInput(addISBN, 13) == false) {
+        cin.clear();
+        getline(cin, addISBN);
+      }
+    }
+    cout << "Enter Title: " << endl;
+    cin.clear();
     getline(cin, addTitle);
-    cout << endl;
-    book1.addBook(addTitle);
-    // Remove added book
-    book1.removeBook(addTitle);
+    cout << "Enter Author: " << endl;
+    cin.clear();
+    getline(cin, addAuthor);
+    cout << "Enter Year of Publication: " << endl;
+    cin.clear();
+    getline(cin, addYear);
+    // Validate year of publication
+    if (addYear != "Unknown" && addYear != "unknown") {
+      while (validInput(addYear, 4) == false) {
+        cin.clear();
+        getline(cin, addYear);
+      }
+    }
+    cout << "Enter Publisher: " << endl;
+    cin.clear();
+    getline(cin, addPublisher);
+    cout << "Enter Genre: " << endl;
+    cin.clear();
+    getline(cin, addGenre);
+    cout << "Enter Description: " << endl;
+    cin.clear();
+    getline(cin, addDescription);
+
+    // Use entered input to add row in database
+    add_data(db, addISBN.c_str(), addTitle.c_str(), addAuthor.c_str(), addYear.c_str(), addPublisher.c_str(), addGenre.c_str(), addDescription.c_str());
   }
 
+  // Remove a book
+  string delTitle; 
+  cout << endl;
+  cout << "Would you like to remove a book to the inventory? Enter y/n." << endl;
+  cin >> promptChoice;
+  while (promptChoice != 'y' && promptChoice != 'n') {
+    cout << "Invalid entry. Please type 'y' for yes, 'n' for no. " << endl;
+    cin >> promptChoice;
+  }
+  if (promptChoice == 'y') {
+    cout << "Please enter the title of the book you'd like to remove. " << endl;
+    cin.ignore();
+    getline(cin, delTitle);
+    remove_data(db, delTitle.c_str());
+  }
 }
-
