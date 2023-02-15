@@ -22,7 +22,6 @@ int main() {
     fprintf(stderr, "Opened database successfully\n");
   }
 
-
   /* Commented out because test.db already exists and is populated
   // Create table and insert data
   create_table(db);
@@ -80,7 +79,7 @@ int main() {
     }
     else {
       cout << "Please enter a book title: " << endl;
-      cin.clear();
+      cin.ignore();
       getline(cin, title);
       cout << "Retrieving book information..." << endl;
       cout << endl;
@@ -143,8 +142,10 @@ int main() {
     cin.clear();
     getline(cin, addDescription);
 
-    // Use entered input to add row in database
+    // Add row in database
     add_data(db, addISBN.c_str(), addTitle.c_str(), addAuthor.c_str(), addYear.c_str(), addPublisher.c_str(), addGenre.c_str(), addDescription.c_str());
+    // Add to vector in class
+    book1.addToVec(addISBN, addTitle, addAuthor, addYear, addPublisher, addGenre, addDescription);
   }
 
   // Remove a book
@@ -160,6 +161,9 @@ int main() {
     cout << "Please enter the title of the book you'd like to remove. " << endl;
     cin.ignore();
     getline(cin, delTitle);
+    // Remove row from database
     remove_data(db, delTitle.c_str());
+    // Remove element from vector
+    book1.removeFromVec(delTitle);
   }
 }

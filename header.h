@@ -4,6 +4,7 @@
 #include <fstream>
 #include <deque>
 #include <vector>
+#include <algorithm>
 #include "json.hpp"
 
 #ifndef HEADER_H_
@@ -17,12 +18,15 @@ public:
     // Class constructor
     BookInventory() {
         setAllVectors();
+        addFields();
         setAllBookValues();
     }
+
     // Overloaded constructor
     BookInventory(string input) {
         inputTitle = input;
         setAllVectors();
+        addFields();
         setAllBookValues();
     }
 
@@ -66,11 +70,31 @@ public:
         return publishers;
     }
 
+    // Getters for Genre
+    string getGenre() {
+        return bookGenre;
+    }
+    vector<string> getGenreVec() {
+        return genres;
+    }
+
+    // Getter for Description
+    string getDescription() {
+        return bookDescription;
+    }
+    vector<string> getDescriptionVec() {
+        return descriptions;
+    }
+
+    void addToVec(string addISBN, string addTitle, string addAuthor, string addYear, string addPublisher, string addGenre, string addDescription);
+
+    void removeFromVec(string delTitle);
+
     // Display function
     void Display();
 
     // Modify vectors to add apostrophes (for SQLite handling)
-    vector<string> modifyVector(vector<string> updaateVector);
+    vector<string> modifyVector(vector<string> updateVector);
 
 private:
     string inputTitle;
@@ -79,6 +103,8 @@ private:
     vector<string> authors;
     vector<string> years;
     vector<string> publishers;
+    vector<string> genres;
+    vector<string> descriptions;
     string ISBN;
     string bookTitle;
     string bookAuthor;
@@ -87,13 +113,16 @@ private:
     string bookGenre;
     string bookDescription;
 
-    // Setter for all vectors
+    // Setter for all vectors from json parsing
     void setAllVectors();
 
-    // Finds index number of title or ISBN if it exists
+    // Add fields for genre, description
+    void addFields();
+
+    // Finds index number of title if it exists
     int findIndexNum();
 
-    // Setters for ISBN, Title, Author, Year of Publication, Publisher
+    // Setters for ISBN, Title, Author, Year of Publication, Publisher, Genre, Description
     void setAllBookValues();
 };
 
@@ -108,7 +137,18 @@ private:
             cout << "Author: " << getAuthor() << endl;
             cout << "Year of Publication: " << getYearOfPub() << endl;
             cout << "Publisher: " << getPublisher() << endl;
+            cout << "Genre: " << getGenre() << endl;
+            cout << "Description: " << getDescription() << endl;
+            cout << "Size of title vector: " << getTitleVec().size() << endl;
+            cout << "Size of genre vector: " << getGenreVec().size() << endl;
             cout << endl;
+        }
+    }
+
+    void BookInventory::addFields() {
+        for (int i = 0; i < 271361; i++) {
+            genres.push_back("Null");
+            descriptions.push_back("Null");
         }
     }
 
@@ -121,7 +161,7 @@ private:
         json_file >> data;
 
         // Catching Errors
-        for (int i = 0; i < data.size(); i++) {
+        for (int i = 1; i < data.size(); i++) {
             try {
                 const auto& book = data[i];
                 string isbn = book["isbn"];
@@ -158,24 +198,34 @@ private:
             bookAuthor = "Not found";
             yearOfPub = "Not found";
             bookPublisher = "Not found";
+            bookGenre = "Not found";
+            bookDescription = "Not found";
         } else {
             ISBN = isbns[index];
             bookTitle = titles[index];
             bookAuthor = authors[index];
             yearOfPub = years[index];
             bookPublisher = publishers[index];
+            bookGenre = genres[index];
+            bookDescription = descriptions[index];
         }
     }
 
-    // Modifying vectors to prep for insertion into SQLite
-    vector<string> BookInventory::modifyVector(vector<string> updateVector) {
-        for (int i = 0; i < updateVector.size(); i++) {
-            if (updateVector[i].find("'") != std::string::npos) {
-                int pos = updateVector[i].find("'");
-                updateVector[i].insert(pos+1, "'");
-            }
-        }
-        return updateVector;
+    // Add data to vector
+    void BookInventory::addToVec(string addISBN, string addTitle, string addAuthor, string addYear, string addPublisher, string addGenre, string addDescription) {
+        isbns.push_back(addISBN);
+        titles.push_back(addTitle);
+        authors.push_back(addAuthor);
+        years.push_back(addYear);
+        publishers.push_back(addPublisher);
+        genres.push_back(addGenre);
+        descriptions.push_back(addDescription);
+        cout << "Data successfully added to vectors. " << endl;
+    }
+
+    // FIX ME: Segmentation fault if removing from last
+    // Remove data from vector
+    void BookInventory::removeFromVec(string delTitle) {
     }
 
     // Validate input for ISBN, Year
@@ -191,6 +241,17 @@ private:
             }
         }
         return true;
+    }
+
+    // Modifying vectors to prep for insertion into SQLite
+    vector<string> BookInventory::modifyVector(vector<string> updateVector) {
+        for (int i = 0; i < updateVector.size(); i++) {
+            if (updateVector[i].find("'") != std::string::npos) {
+                int pos = updateVector[i].find("'");
+                updateVector[i].insert(pos+1, "'");
+            }
+        }
+        return updateVector;
     }
 
 #endif /* HEADER_H_ */
