@@ -168,7 +168,7 @@ int main() {
   }
 
   // Make a list and display the list
+  cout << "To make a list of books, please enter a title. We will check if it is in the database, and if it is, we will add it to your list. " << endl;
   book1.makeList();
   book1.DisplayList();
-
 }

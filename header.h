@@ -105,7 +105,7 @@ public:
 
 private:
     char toContinue;
-    int countItems;
+    int count;
     string inputTitle;
     vector<string> isbns;
     vector<string> titles;
@@ -276,7 +276,6 @@ private:
 
     // Make a list of lists to store data user wants to append
     int BookInventory::makeList() {
-        cout << "To make a list of books, please enter a title. We will check if it is in the database, and if it is, we will add it to your list. " << endl;
         while (toContinue != 'q') {
             cout << "Please enter a title. " << endl;
             cin.ignore();
@@ -286,7 +285,6 @@ private:
             }
             // Add isbn, author, title to list
             else {
-                countItems += 1;
                 small.push_back(isbns[findIndexNum(bookTitle)]);
                 small.push_back(titles[findIndexNum(bookTitle)]);
                 small.push_back(authors[findIndexNum(bookTitle)]);
@@ -296,7 +294,7 @@ private:
             cin >> toContinue;
         }
         big.push_back(small);
-        return countItems;
+        return (small.size() / 3);
     }
 
     // Display List
@@ -338,6 +336,5 @@ private:
         }
         return updateVector;
     }
-
 
 #endif /* HEADER_H_ */
