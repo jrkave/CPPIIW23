@@ -114,8 +114,8 @@ private:
     vector<string> publishers;
     vector<string> genres;
     vector<string> descriptions;
-    vector<vector<string>> big;
-    vector<string> small;
+    list<list<string>> big;
+    list<string> small;
     string ISBN;
     string bookTitle;
     string bookAuthor;
