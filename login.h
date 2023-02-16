@@ -61,7 +61,7 @@ private:
 	    	encryptedPassword.append(b);
 	    }
 	    // Write username and password delimited by comma
-	    myFile << username << "," << password << endl;
+	    myFile << encryptedPassword << "," << encryptedPassword << endl;
 	    myFile.close();
 
 	    cout << "Thank you for creating an account with us, "  << username << "." << endl;
