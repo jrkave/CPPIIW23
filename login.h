@@ -30,7 +30,8 @@ public:
     }
 
 private:
-    string username, password;
+    string username, password, plainPassword, encryptedPassword;
+    char ch;
     string user;
     string CSVfilename = "login.csv";
     ofstream myFile;
