@@ -1,112 +1,68 @@
-// header.h
+/*
+*  Filename: header.h
+*  Created on: 02/15/2023
+*  Author(s): Veenkamp, Brooks, James
+*/
 
 #include <iostream>
 #include <fstream>
-#include <deque>
 #include <vector>
 #include <list>
 #include <algorithm>
 #include "json.hpp"
 
-#ifndef HEADER_H_
-#define HEADER_H_
+#ifndef BOOKINVENTORY_H_
+#define BOOKINVENTORY_H_
 
 using namespace std;
 using json = nlohmann::json;
 
+// TO DO //
+// 1) Validate ISBN, Year for makeUserList() function (see validInput() function)
+// 2) Populate field for MSRP with random values (see note in addFields() function)
+// 3) Add shoppingList functionality; must be sorted by price and written to CSV/JSON file
+        // Will likely be similar (and easier than) current user list functionality
+// 4) Create admin menu (can be added within the executeMenu() method that is already present); see assignment details
+// 5) SQLite database operations (adding, removing)
+// 6) Fix current errors denoted by ** FIX ME ** comments (scroll through to see)
+// 7) Login functionality
+// 8) Update main.cpp with new functionalities
+
+// Creation of class
 class BookInventory {
 public:
     // Class constructor
     BookInventory() {
-        setAllVectors();
+        setVectors();
         addFields();
-        setAllBookValues();
     }
 
-    // Overloaded constructor
-    BookInventory(string input) {
-        inputTitle = input;
-        setAllVectors();
-        addFields();
-        setAllBookValues();
-    }
+    // Print menu function
+    void printMenu();
 
-    // Getters for ISBN
-    vector<string> getISBNVec() {
-        return isbns;
-    }
-    string getISBN() {
-        return ISBN;
-    }
+    // Execute menu selections
+    void executeMenu(int input);
 
-    // Getters for Title
-    string getTitle() {
-        return bookTitle;
-    }
-    vector<string> getTitleVec() {
-        return titles;
-    }
+    // Display function when user wishes to retrieve information about a book
+    void displayBookInformation(string title);
 
-    // Getters for Author
-    string getAuthor() {
-        return bookAuthor;
-    }
-    vector<string> getAuthorsVec() {
-        return authors;
-    }
+    // Adds values to vectors
+    void insertUserList(vector<string> addToUserList);
 
-    // Getters for Year of Publication
-    string getYearOfPub() {
-        return yearOfPub;
-    }
-    vector<string> getYearVec() {
-        return years;
-    }
+    // Get vector of values to insert
+    vector<string> makeUserList();
 
-    // Getters for Publisher
-    string getPublisher() {
-        return bookPublisher;
-    }
-    vector<string> getPublisherVec() {
-        return publishers;
-    }
+    // Write contents of user list to csv file
+    void writeToCSV(vector<string> addToUserList);
 
-    // Getters for Genre
-    string getGenre() {
-        return bookGenre;
-    }
-    vector<string> getGenreVec() {
-        return genres;
-    }
+    // Print list of values to add to screen
+    void displayAddValues(vector<string> addToUserList);
 
-    // Getter for Description
-    string getDescription() {
-        return bookDescription;
-    }
-    vector<string> getDescriptionVec() {
-        return descriptions;
-    }
-
-    void addToVec(string addISBN, string addTitle, string addAuthor, string addYear, string addPublisher, string addGenre, string addDescription);
-
-    void removeFromVec(string delTitle);
-
-    // Display function
-    void Display();
-
-    // Modify vectors to add apostrophes (for SQLite handling)
-    vector<string> modifyVector(vector<string> updateVector);
-
-    // Make a list for user of books they want to add
-    int makeList();
-
-    // Display user list
-    void DisplayList();
+    // Creates a shopping list of books in database and prints the list to the user
+    void makeShoppingList();
 
 private:
-    char toContinue;
-    int count;
-    string inputTitle;
+    // Declaration of vectors
     vector<string> isbns;
     vector<string> titles;
     vector<string> authors;
@@ -114,94 +70,150 @@ private:
     vector<string> publishers;
     vector<string> genres;
     vector<string> descriptions;
-    list<list<string>> big;
-    list<string> small;
-    string ISBN;
-    string bookTitle;
-    string bookAuthor;
-    string yearOfPub;
-    string bookPublisher;
-    string bookGenre;
-    string bookDescription;
+    vector<string> msrps;
+    vector<string> quantities;
+    vector<string> addToShopList;
+    vector<string> addToUserList;
+    // Declarations of values in vectors
+    string isbn;
+    string title;
+    string author;
+    string year;
+    string publisher;
+    string genre;
+    string description;
+    string msrp;
+    string quantity;
+    // Other declarations
+    int count;
+    char quit;
+    ofstream file;
+    string csvFile = "test.csv";
+    string jsonFile = "book.json";
+    
+    // Initializes vectors with JSON data
+    int setVectors();
 
-    // Setter for all vectors from json parsing
-    void setAllVectors();
-
-    // Add fields for genre, description
+    // Creates vectors for added fields (genre, description, msrp, quantity)
     void addFields();
 
-    // Finds index number of title if it exists
-    int findIndexNum();
-
-    // Overloaded findIndexNum
+    // Finds index of vectors based on title
     int findIndexNum(string title);
 
-    // Setters for ISBN, Title, Author, Year of Publication, Publisher, Genre, Description
-    void setAllBookValues();
+    // Validate input
+    bool validInput(string check, int len1, int len2);
+
 };
 
-    void BookInventory::Display() {
-        if (getTitle() == "Not found") {
-            cout << "Invalid entry or book not found." << endl;
+    // Prints menu of selections
+    void BookInventory::printMenu() {
+        cout << endl;
+        cout << " ====== MENU SELECTION ====== " << endl;
+        cout << "To retrieve information about a book, enter 1." << endl;
+        cout << "To add a list of books, enter 2." << endl;
+    }
+
+    // Execute menu selections
+    /* ** FIX ME ** */
+    // Add more options for menu selection once relevant methods are complete
+    void BookInventory::executeMenu(int input) {
+        string userTitle;
+        vector<string> userVec;
+        if (input == 1) {
+            cout << "Please enter the title of the book you wish to retrieve. " << endl;
+            cin.ignore();
+            getline(cin, userTitle);
+            displayBookInformation(userTitle);
+        }
+        else if (input == 2) {
+            cout << "To add a book, we will need some additional information. Please enter the following, keeping in mind that ISBNs must be a 10 or 13-digit number, and years must be a 4-digit number. " << endl;
+            cout << endl;
+            while (quit != 'q') {
+                /* ** FIX ME ** */
+                // Currently, userVec is not being updated with new values even after new function calls to makeUserList()
+                userVec = makeUserList(); 
+                insertUserList(userVec);
+                writeToCSV(userVec);
+                displayAddValues(userVec);
+                // Continue prompt
+                cout << "Would you like to add another book? Enter 'q' to stop or any other letter to continue." << endl;
+                cin >> quit;
+            }
+        }
+        /* ** FIX ME ** */
+        // Add option for shopping list
+    }
+
+    // Display function for retrieving values
+    void BookInventory::displayBookInformation(string title) {
+        int index = findIndexNum(title);
+        if (findIndexNum(title) != -1) {
+            cout << endl;
+            cout << "ISBN: " << isbns[index] << endl;
+            cout << "Title: " << titles[index] << endl;
+            cout << "Author: " << authors[index] << endl;
+            cout << "Year of publication: " << years[index] << endl;
+            cout << "Publisher: " << publishers[index] << endl;
+            cout << "Genre: " << genres[index] << endl;
+            cout << "Description: " << descriptions[index] << endl;
+            cout << "MSRP: " << msrps[index] << endl;
+            cout << "Quantity: " << quantities[index] << endl;
+            cout << endl;
         }
         else {
-            cout << endl;
-            cout << "ISBN: " << getISBN() << endl;
-            cout << "Title: " << getTitle() << endl;
-            cout << "Author: " << getAuthor() << endl;
-            cout << "Year of Publication: " << getYearOfPub() << endl;
-            cout << "Publisher: " << getPublisher() << endl;
-            cout << "Genre: " << getGenre() << endl;
-            cout << "Description: " << getDescription() << endl;
+            cout << "Book not found. " << endl;
             cout << endl;
         }
     }
 
-    void BookInventory::addFields() {
-        for (int i = 0; i < 271361; i++) {
-            genres.push_back("Null");
-            descriptions.push_back("Null");
+    // Sets vectors with parsed json data
+    int BookInventory::setVectors() {
+
+        // Opens JSON file
+        ifstream json_file(jsonFile);
+        // Validation for opening of file
+        if (json_file.is_open()) {
+            cout << "Starting system... " << endl;
         }
-    }
+        else {
+            cout << "Error opening the file. " << endl;
+            return -1;
+        }
 
-    void BookInventory::setAllVectors() {
-        // Open JSON file
-        ifstream json_file("book.json");
-
-        // Parse JSON data
+        // Creates JSON object "data" and parses file
         json data;
         json_file >> data;
 
-        // Catching Errors
+        // Updates vectors with parsed data, includes error handling
         for (int i = 1; i < data.size(); i++) {
             try {
                 const auto& book = data[i];
-                string isbn = book["isbn"];
-                string title = book["title"];
-                string author = book["author"];
-                string year = book["year"];
-                string publisher = book["publisher"];
-                isbns.push_back(isbn);
-                titles.push_back(title);
-                authors.push_back(author);
-                years.push_back(year);
-                publishers.push_back(publisher);
-            } catch(exception *e) {
-                cout << "err" << endl;
+                // Adds data to vector
+                isbns.push_back(book["isbn"]);
+                titles.push_back(book["title"]);
+                authors.push_back(book["author"]);
+                years.push_back(book["year"]);
+                publishers.push_back(book["publisher"]);
+            } catch (exception *e) {
+                cout << "Error in parsing file. " << endl;
             }
         }
+        return 0;
     }
 
-    int BookInventory::findIndexNum() {
-        // Iterate over titles vector
+    // Adds fields for genre, description, MSRP, quantity
+    void BookInventory::addFields() {
         for (int i = 0; i < titles.size(); i++) {
-            if (titles[i] == inputTitle) {
-                return i;
-            }
+            genres.push_back("NULL");
+            descriptions.push_back("NULL");
+            quantities.push_back("NULL");
+            /* ** FIX ME ** */
+            // Fill in MSRP data with random number (type-cast as string before insertion)
+            msrps.push_back("NULL");
         }
-        return -1;
     }
 
+    // Returns the index of a given title if it exists
     int BookInventory::findIndexNum(string title) {
         for (int i = 0; i < titles.size(); i++) {
             if (titles[i] == title) {
@@ -211,109 +223,80 @@ private:
         return -1;
     }
 
-    void BookInventory::setAllBookValues() {
-        int index = findIndexNum();
-        if (index == -1) {
-            ISBN = "Not found";
-            bookTitle = "Not found";
-            bookAuthor = "Not found";
-            yearOfPub = "Not found";
-            bookPublisher = "Not found";
-            bookGenre = "Not found";
-            bookDescription = "Not found";
-        } else {
-            ISBN = isbns[index];
-            bookTitle = titles[index];
-            bookAuthor = authors[index];
-            yearOfPub = years[index];
-            bookPublisher = publishers[index];
-            bookGenre = genres[index];
-            bookDescription = descriptions[index];
-        }
+    // Gathers input for user list and returns it as vector
+    vector<string> BookInventory::makeUserList() {
+        string addISBN, addTitle, addAuthor, addYear, addPublisher, addGenre, addDescription, addMSRP, addQuantity;
+        // Get values
+        cout << "ISBN to add: " << endl;
+        cin.ignore();
+        getline(cin, addISBN);
+        addToUserList.push_back(addISBN);
+        cout << "Title to add: " << endl;
+        getline(cin, addTitle);
+        addToUserList.push_back(addTitle);
+        cout << "Author to add: " << endl;
+        getline(cin, addAuthor);
+        addToUserList.push_back(addAuthor);
+        cout << "Year to add: " << endl;
+        getline(cin, addYear);
+        addToUserList.push_back(addYear);
+        cout << "Publisher to add: " << endl;
+        getline(cin, addPublisher);
+        addToUserList.push_back(addPublisher);
+        cout << "Genre to add: " << endl;
+        getline(cin, addGenre);
+        addToUserList.push_back(addGenre);
+        cout << "Description to add: " << endl;
+        getline(cin, addDescription);
+        addToUserList.push_back(addDescription);
+        cout << "MSRP to add: " << endl;
+        getline(cin, addMSRP);
+        addToUserList.push_back(addMSRP);
+        cout << "Quantity to add: " << endl;
+        getline(cin, addQuantity);
+        addToUserList.push_back(addQuantity);
+    
+        return addToUserList;
     }
 
-    // Add data to vector
-    void BookInventory::addToVec(string addISBN, string addTitle, string addAuthor, string addYear, string addPublisher, string addGenre, string addDescription) {
-        isbns.push_back(addISBN);
-        titles.push_back(addTitle);
-        authors.push_back(addAuthor);
-        years.push_back(addYear);
-        publishers.push_back(addPublisher);
-        genres.push_back(addGenre);
-        descriptions.push_back(addDescription);
-        cout << "Data successfully added to vectors. " << endl;
+    // Inserts values from makeUserList to vectors
+    void BookInventory::insertUserList(vector<string> addToUserList) {
+        for (int i = 0; i < addToUserList.size(); i++) {
+            isbns.push_back(addToUserList[0]);
+            titles.push_back(addToUserList[1]);
+            authors.push_back(addToUserList[2]);
+            years.push_back(addToUserList[3]);
+            publishers.push_back(addToUserList[4]);
+            genres.push_back(addToUserList[5]);
+            descriptions.push_back(addToUserList[6]);
+            msrps.push_back(addToUserList[7]);
+            quantities.push_back(addToUserList[8]);
+        }
+        cout << "Data inserted successfully. " << endl;
     }
 
-    // FIX ME: Segmentation fault if removing from last
-    // Remove data from vector
-    void BookInventory::removeFromVec(string delTitle) {
-        if (findIndexNum(delTitle) == (titles.size() - 1)) {
-            // If input title is last element from vector, delete it
-            isbns.pop_back();
-            titles.pop_back();
-            authors.pop_back();
-            years.pop_back();
-            publishers.pop_back();
-            genres.pop_back();
-            descriptions.pop_back();
-            cout << "Data removed succesfullly from vectors. " << endl;
+    // Write csv file for User List
+    void BookInventory::writeToCSV(vector<string> addToUserList) {
+        // Open file
+        file.open(csvFile);
+        for (int i = 0; i < addToUserList.size(); i++) {
+            file << addToUserList[i] << ",";
         }
-        else if (findIndexNum(delTitle) == -1 ) {
-            // If findIndex num returns -1, the book was not found in titles vector
-            cout << "Book not found. " << endl;
-        }
-        else {
-            // Erase elements by index
-            titles.erase(titles.begin() + findIndexNum(delTitle));
-            isbns.erase(isbns.begin() + findIndexNum(delTitle));
-            authors.erase(authors.begin() + findIndexNum(delTitle));
-            years.erase(years.begin() + findIndexNum(delTitle));
-            publishers.erase(titles.begin() + findIndexNum(delTitle));
-            genres.erase(isbns.begin() + findIndexNum(delTitle));
-            descriptions.erase(titles.begin() + findIndexNum(delTitle));
-        }
+        file << endl;
+        cout << "Entry successfully written to CSV file. " << endl;
+        file.close();
     }
 
-    // Make a list of lists to store data user wants to append
-    int BookInventory::makeList() {
-        while (toContinue != 'q') {
-            cout << "Please enter a title. " << endl;
-            cin.ignore();
-            getline(cin, bookTitle);
-            if (findIndexNum(bookTitle) == -1) {
-                cout << "Book not found. " << endl;
-            }
-            // Add isbn, author, title to list
-            else {
-                small.push_back(isbns[findIndexNum(bookTitle)]);
-                small.push_back(titles[findIndexNum(bookTitle)]);
-                small.push_back(authors[findIndexNum(bookTitle)]);
-                cout << "Successfullly added to list. " << endl;
-            }
-            cout << "Would you like to add another book? Enter 'q' to quit, or any other letter to continue. " << endl;
-            cin >> toContinue;
-        }
-        big.push_back(small);
-        return (small.size() / 3);
-    }
-
-    // Display List
-    void BookInventory::DisplayList() {
-        // Iterate through the outer list and print the values of the inner lists
-        for (auto outer_it = big.begin(); outer_it != big.end(); ++outer_it) {
-            // Iterate through the inner list and print its values, skipping the first element
-            for (auto inner_it = outer_it->begin(); inner_it != outer_it->end(); ++inner_it) {
-                cout << *inner_it << " ";
-            }
-            cout << endl;
-        cout << endl;
-        }
-        cout << "Total items: " << makeList() << endl;
+    // Display values of list user wishes to add
+    void BookInventory::displayAddValues(vector<string> addToUserList) {
+        cout << "ISBN: " << addToUserList[0] << endl;
+        cout << "Title: " << addToUserList[1] <<endl;
+        cout << "Author: " << addToUserList[2] << endl;
     }
 
     // Validate input for ISBN, Year
-    bool validInput(string check, int len) {
-        if (check.length() != len) {
+    bool BookInventory::validInput(string check, int len1, int len2) {
+        if (check.length() != len1 && check.length() != len2) {
             cout << "Invalid input. Please try again." << endl;
             return false;
         }
@@ -326,15 +309,4 @@ private:
         return true;
     }
 
-    // Modifying vectors to prep for insertion into SQLite
-    vector<string> BookInventory::modifyVector(vector<string> updateVector) {
-        for (int i = 0; i < updateVector.size(); i++) {
-            if (updateVector[i].find("'") != std::string::npos) {
-                int pos = updateVector[i].find("'");
-                updateVector[i].insert(pos+1, "'");
-            }
-        }
-        return updateVector;
-    }
-
-#endif /* HEADER_H_ */
+#endif /* BOOKINVENTORY_H_ */
