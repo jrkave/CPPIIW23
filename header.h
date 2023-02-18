@@ -1,5 +1,5 @@
 /*
-*  Filename: header.h
+*  Filename: bookinventory.h
 *  Created on: 02/15/2023
 *  Author(s): Veenkamp, Brooks, James
 */
@@ -8,6 +8,8 @@
 #include <fstream>
 #include <vector>
 #include <list>
+#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include "json.hpp"
 
@@ -43,24 +45,6 @@ public:
     // Execute menu selections
     void executeMenu(int input);
 
-    // Display function when user wishes to retrieve information about a book
-    void displayBookInformation(string title);
-
-    // Adds values to vectors
-    void insertUserList(vector<string> addToUserList);
-
-    // Get vector of values to insert
-    vector<string> makeUserList();
-
-    // Write contents of user list to csv file
-    void writeToCSV(vector<string> addToUserList);
-
-    // Print list of values to add to screen
-    void displayAddValues(vector<string> addToUserList);
-
-    // Creates a shopping list of books in database and prints the list to the user
-    void makeShoppingList();
-
 private:
     // Declaration of vectors
     vector<string> isbns;
@@ -72,8 +56,6 @@ private:
     vector<string> descriptions;
     vector<string> msrps;
     vector<string> quantities;
-    vector<string> addToShopList;
-    vector<string> addToUserList;
     // Declarations of values in vectors
     string isbn;
     string title;
@@ -88,7 +70,8 @@ private:
     int count;
     char quit;
     ofstream file;
-    string csvFile = "test.csv";
+    string userListCSV = "userList.csv";
+    string shopListCSV = "shoppingList.csv";
     string jsonFile = "book.json";
     
     // Initializes vectors with JSON data
@@ -103,6 +86,21 @@ private:
     // Validate input
     bool validInput(string check, int len1, int len2);
 
+    // Display function when user wishes to retrieve information about a book
+    void displayBookInformation(string title);
+
+    // Get vector of values to insert to user list
+    unordered_map<string, string> makeUserList();
+
+    // Adds values of user list to vectors
+    void insertUserList(unordered_map<string, string> userMap);
+
+    // Write contents of user list to csv file
+    void writeUserList(unordered_map<string, string> userMap, string fileName);
+
+    // Print user list to screen
+    void displayUserList(vector<string> userList);
+
 };
 
     // Prints menu of selections
@@ -111,37 +109,65 @@ private:
         cout << " ====== MENU SELECTION ====== " << endl;
         cout << "To retrieve information about a book, enter 1." << endl;
         cout << "To add a list of books, enter 2." << endl;
+        cout << "To create a shopping list, enter 3." << endl;
     }
 
     // Execute menu selections
-    /* ** FIX ME ** */
-    // Add more options for menu selection once relevant methods are complete
     void BookInventory::executeMenu(int input) {
+        // Declarations
         string userTitle;
-        vector<string> userVec;
+        unordered_map<string, string> userMap;
+        map<int, string> shoppingList;
+        vector<string> userList;
+
+        // Retrieval of book information
         if (input == 1) {
+            cout << endl;
             cout << "Please enter the title of the book you wish to retrieve. " << endl;
             cin.ignore();
             getline(cin, userTitle);
             displayBookInformation(userTitle);
         }
+        // Adding books to user list
         else if (input == 2) {
+            cout << endl;
             cout << "To add a book, we will need some additional information. Please enter the following, keeping in mind that ISBNs must be a 10 or 13-digit number, and years must be a 4-digit number. " << endl;
             cout << endl;
             while (quit != 'q') {
-                /* ** FIX ME ** */
-                // Currently, userVec is not being updated with new values even after new function calls to makeUserList()
-                userVec = makeUserList(); 
-                insertUserList(userVec);
-                writeToCSV(userVec);
-                displayAddValues(userVec);
+                userMap = makeUserList(); 
+                userList.push_back(userMap["isbn"]);
+                userList.push_back(userMap["title"]);
+                userList.push_back(userMap["author"]);
+                insertUserList(userMap);
+                writeUserList(userMap, userListCSV);
                 // Continue prompt
                 cout << "Would you like to add another book? Enter 'q' to stop or any other letter to continue." << endl;
                 cin >> quit;
             }
+            cout << endl;
+            // Displays ISBN, title, author, # of books added
+            cout << "List of books added: " << endl;
+            displayUserList(userList);
         }
-        /* ** FIX ME ** */
-        // Add option for shopping list
+        // Creating shopping list
+        else if (input == 3) {
+            // FIX ME
+            cout << endl;
+            cout << "To make a shopping list, please enter the titles of the books you wish to add. " << endl;
+            cin.ignore();
+            getline(cin, userTitle);
+            cout << endl;
+            while (quit != 'q') {
+                if (findIndexNum(userTitle) == -1) {
+                    cout << "Book not found. " << endl;
+                }
+                else {
+                    // Stores values as key, value pair {indexNum, MSRP}; sorting by MSRP value will come later
+                    shoppingList.insert({findIndexNum(userTitle), msrps[findIndexNum(userTitle)]});
+                    cout << "FIX ME" << endl;
+                }
+            }
+        }
     }
 
     // Display function for retrieving values
@@ -224,74 +250,82 @@ private:
     }
 
     // Gathers input for user list and returns it as vector
-    vector<string> BookInventory::makeUserList() {
+    unordered_map<string, string> BookInventory::makeUserList() {
+        unordered_map<string, string> userMap;
         string addISBN, addTitle, addAuthor, addYear, addPublisher, addGenre, addDescription, addMSRP, addQuantity;
         // Get values
         cout << "ISBN to add: " << endl;
         cin.ignore();
         getline(cin, addISBN);
-        addToUserList.push_back(addISBN);
+        userMap["isbn"] = addISBN;
         cout << "Title to add: " << endl;
         getline(cin, addTitle);
-        addToUserList.push_back(addTitle);
+        userMap["title"] = addTitle;
         cout << "Author to add: " << endl;
         getline(cin, addAuthor);
-        addToUserList.push_back(addAuthor);
+        userMap["author"] = addAuthor;
         cout << "Year to add: " << endl;
         getline(cin, addYear);
-        addToUserList.push_back(addYear);
+        userMap["year"] = addYear;
         cout << "Publisher to add: " << endl;
         getline(cin, addPublisher);
-        addToUserList.push_back(addPublisher);
+        userMap["publisher"] = addPublisher;
         cout << "Genre to add: " << endl;
         getline(cin, addGenre);
-        addToUserList.push_back(addGenre);
+        userMap["genre"] = addGenre;
         cout << "Description to add: " << endl;
         getline(cin, addDescription);
-        addToUserList.push_back(addDescription);
+        userMap["description"] = addDescription;
         cout << "MSRP to add: " << endl;
         getline(cin, addMSRP);
-        addToUserList.push_back(addMSRP);
+        userMap["msrp"] = addMSRP;
         cout << "Quantity to add: " << endl;
         getline(cin, addQuantity);
-        addToUserList.push_back(addQuantity);
-    
-        return addToUserList;
+        userMap["quantity"] = addQuantity;
+        return userMap;
     }
 
     // Inserts values from makeUserList to vectors
-    void BookInventory::insertUserList(vector<string> addToUserList) {
-        for (int i = 0; i < addToUserList.size(); i++) {
-            isbns.push_back(addToUserList[0]);
-            titles.push_back(addToUserList[1]);
-            authors.push_back(addToUserList[2]);
-            years.push_back(addToUserList[3]);
-            publishers.push_back(addToUserList[4]);
-            genres.push_back(addToUserList[5]);
-            descriptions.push_back(addToUserList[6]);
-            msrps.push_back(addToUserList[7]);
-            quantities.push_back(addToUserList[8]);
-        }
+    void BookInventory::insertUserList(unordered_map<string, string> userMap) {
+        isbns.push_back(userMap["isbn"]);
+        titles.push_back(userMap["title"]);
+        authors.push_back(userMap["author"]);
+        years.push_back(userMap["year"]);
+        publishers.push_back(userMap["publisher"]);
+        genres.push_back(userMap["genre"]);
+        descriptions.push_back(userMap["description"]);
+        msrps.push_back(userMap["msrp"]);
+        quantities.push_back(userMap["quantity"]);
         cout << "Data inserted successfully. " << endl;
     }
 
     // Write csv file for User List
-    void BookInventory::writeToCSV(vector<string> addToUserList) {
+    void BookInventory::writeUserList(unordered_map<string, string> userMap, string fileName) {
         // Open file
-        file.open(csvFile);
-        for (int i = 0; i < addToUserList.size(); i++) {
-            file << addToUserList[i] << ",";
-        }
+        file.open(fileName, ios_base::app);
+        file << userMap["isbn"] + ",";
+        file << userMap["title"] + ",";
+        file << userMap["author"] + ",";
+        file << userMap["year"] + ",";
+        file << userMap["publisher"] + ",";
+        file << userMap["genre"] + ",";
+        file << userMap["description"] + ",";
+        file << userMap["msrp"] + ",";
+        file << userMap["quantity"] + ",";
         file << endl;
         cout << "Entry successfully written to CSV file. " << endl;
         file.close();
     }
 
     // Display values of list user wishes to add
-    void BookInventory::displayAddValues(vector<string> addToUserList) {
-        cout << "ISBN: " << addToUserList[0] << endl;
-        cout << "Title: " << addToUserList[1] <<endl;
-        cout << "Author: " << addToUserList[2] << endl;
+    void BookInventory::displayUserList(vector<string> userList) {
+        for (int i = 0; i < userList.size(); i += 3) {
+            cout << "ISBN: " << userList[i] << endl;
+            cout << "Title: " << userList[i+1] << endl;
+            cout << "Author: " << userList[i+2] << endl;
+            cout << endl;
+        }
+        cout << "Total items: " << userList.size() / 3 << endl;
     }
 
     // Validate input for ISBN, Year
