@@ -8,6 +8,8 @@
 #include <fstream>
 #include <vector>
 #include <list>
+#include <chrono>
+#include <random>
 #include <map>
 #include <unordered_map>
 #include <algorithm>
@@ -35,8 +37,7 @@ class BookInventory {
 public:
     // Class constructor
     BookInventory() {
-        setVectors();
-        addFields();
+        setVector();
     }
 
     // Print menu function
@@ -46,48 +47,36 @@ public:
     void executeMenu(int input);
 
 private:
-    // Declaration of vectors
-    vector<string> isbns;
-    vector<string> titles;
-    vector<string> authors;
-    vector<string> years;
-    vector<string> publishers;
-    vector<string> genres;
-    vector<string> descriptions;
-    vector<string> msrps;
-    vector<string> quantities;
-    // Declarations of values in vectors
-    string isbn;
-    string title;
-    string author;
-    string year;
-    string publisher;
-    string genre;
-    string description;
-    string msrp;
-    string quantity;
+    // Declaration of struct and vector of structs
+    struct Book {
+        string isbn;
+        string title;
+        string author;
+        string year;
+        string publisher;
+        string genre;
+        string description;
+        double msrp;
+        int quantity; 
+    };
+    Book book;
+    vector<Book> books;
     // Other declarations
-    int count;
-    char quit;
+    int count = 0;
+    char quit = 'm';
     ofstream file;
     string userListCSV = "userList.csv";
     string shopListCSV = "shoppingList.csv";
     string jsonFile = "book.json";
     
     // Initializes vectors with JSON data
-    int setVectors();
+    int setVector();
 
-    // Creates vectors for added fields (genre, description, msrp, quantity)
-    void addFields();
-
-    // Finds index of vectors based on title
-    int findIndexNum(string title);
-
-    // Validate input
-    bool validInput(string check, int len1, int len2);
-
-    // Display function when user wishes to retrieve information about a book
+    // Retrieves and displays information about a book
     void displayBookInformation(string title);
+
+    // Given a title, returns value of index of vector<Book> if book exists
+    int findIndexNum(string title);
 
     // Get vector of values to insert to user list
     unordered_map<string, string> makeUserList();
@@ -95,14 +84,13 @@ private:
     // Adds values of user list to vectors
     void insertUserList(unordered_map<string, string> userMap);
 
-    // Write contents of user list to csv file
+    // Writes user list to CSV file
     void writeUserList(unordered_map<string, string> userMap, string fileName);
 
-    // Print user list to screen
+    // Displays User List
     void displayUserList(vector<string> userList);
 
 };
-
     // Prints menu of selections
     void BookInventory::printMenu() {
         cout << endl;
@@ -117,16 +105,21 @@ private:
         // Declarations
         string userTitle;
         unordered_map<string, string> userMap;
-        map<int, string> shoppingList;
         vector<string> userList;
 
         // Retrieval of book information
         if (input == 1) {
             cout << endl;
-            cout << "Please enter the title of the book you wish to retrieve. " << endl;
-            cin.ignore();
-            getline(cin, userTitle);
-            displayBookInformation(userTitle);
+            while (quit != 'q') {
+                cout << "Please enter the title of the book you wish to retrieve. " << endl;
+                cin.ignore();
+                getline(cin, userTitle);
+                displayBookInformation(userTitle);
+                cout << endl;
+                // Continue prompt
+                cout << "Would you like to retrieve another book? Enter 'q' to stop or another other letter to continue." << endl;
+                cin >> quit;
+            }
         }
         // Adding books to user list
         else if (input == 2) {
@@ -154,46 +147,11 @@ private:
             // FIX ME
             cout << endl;
             cout << "To make a shopping list, please enter the titles of the books you wish to add. " << endl;
-            cin.ignore();
-            getline(cin, userTitle);
-            cout << endl;
-            while (quit != 'q') {
-                if (findIndexNum(userTitle) == -1) {
-                    cout << "Book not found. " << endl;
-                }
-                else {
-                    // Stores values as key, value pair {indexNum, MSRP}; sorting by MSRP value will come later
-                    shoppingList.insert({findIndexNum(userTitle), msrps[findIndexNum(userTitle)]});
-                    cout << "FIX ME" << endl;
-                }
-            }
-        }
-    }
-
-    // Display function for retrieving values
-    void BookInventory::displayBookInformation(string title) {
-        int index = findIndexNum(title);
-        if (findIndexNum(title) != -1) {
-            cout << endl;
-            cout << "ISBN: " << isbns[index] << endl;
-            cout << "Title: " << titles[index] << endl;
-            cout << "Author: " << authors[index] << endl;
-            cout << "Year of publication: " << years[index] << endl;
-            cout << "Publisher: " << publishers[index] << endl;
-            cout << "Genre: " << genres[index] << endl;
-            cout << "Description: " << descriptions[index] << endl;
-            cout << "MSRP: " << msrps[index] << endl;
-            cout << "Quantity: " << quantities[index] << endl;
-            cout << endl;
-        }
-        else {
-            cout << "Book not found. " << endl;
-            cout << endl;
         }
     }
 
     // Sets vectors with parsed json data
-    int BookInventory::setVectors() {
+    int BookInventory::setVector() {
 
         // Opens JSON file
         ifstream json_file(jsonFile);
@@ -210,16 +168,26 @@ private:
         json data;
         json_file >> data;
 
+        srand(time(NULL));
         // Updates vectors with parsed data, includes error handling
         for (int i = 1; i < data.size(); i++) {
             try {
-                const auto& book = data[i];
-                // Adds data to vector
-                isbns.push_back(book["isbn"]);
-                titles.push_back(book["title"]);
-                authors.push_back(book["author"]);
-                years.push_back(book["year"]);
-                publishers.push_back(book["publisher"]);
+                const auto& bookList = data[i];
+                // Add to struct
+                book.isbn = bookList["isbn"];
+                book.title = bookList["title"];
+                book.author = bookList["author"];
+                // Convert string to int
+                book.year = bookList["year"];
+                book.publisher = bookList["publisher"];
+                book.genre = "NULL";
+                book.description = "NULL";
+                int randQuant = rand() % 101;
+                book.quantity = randQuant;
+                double randMSRP = (103.97 - 34.99) * ((double)rand() / (double)RAND_MAX) + 34.99;
+                book.msrp = randMSRP;
+                // Add struct to vector
+                books.push_back(book);
             } catch (exception *e) {
                 cout << "Error in parsing file. " << endl;
             }
@@ -227,22 +195,30 @@ private:
         return 0;
     }
 
-    // Adds fields for genre, description, MSRP, quantity
-    void BookInventory::addFields() {
-        for (int i = 0; i < titles.size(); i++) {
-            genres.push_back("NULL");
-            descriptions.push_back("NULL");
-            quantities.push_back("NULL");
-            /* ** FIX ME ** */
-            // Fill in MSRP data with random number (type-cast as string before insertion)
-            msrps.push_back("NULL");
+    // Display function for retrieving values
+    void BookInventory::displayBookInformation(string title) {
+        int index = findIndexNum(title);
+        if (index == -1) {
+            cout << "Book not found. " << endl;
+        }
+        else {
+            cout << endl;
+            cout << "ISBN: " << books[index].isbn << endl;
+            cout << "Title: " << books[index].title << endl;
+            cout << "Author: " << books[index].author << endl;
+            cout << "Year of publication: " << books[index].year << endl;
+            cout << "Publisher: " << books[index].publisher << endl;
+            cout << "Genre: " << books[index].genre << endl;
+            cout << "Description: " << books[index].description << endl;
+            cout << "MSRP: $" << books[index].msrp << endl;
+            cout << "Quantity: " << books[index].quantity << endl;
         }
     }
 
-    // Returns the index of a given title if it exists
+    // Checks if book exists within vector<Book> books;
     int BookInventory::findIndexNum(string title) {
-        for (int i = 0; i < titles.size(); i++) {
-            if (titles[i] == title) {
+        for (int i = 0; i < books.size(); i++) {
+            if (books[i].title == title) {
                 return i;
             }
         }
@@ -251,6 +227,7 @@ private:
 
     // Gathers input for user list and returns it as vector
     unordered_map<string, string> BookInventory::makeUserList() {
+        // Declare variables
         unordered_map<string, string> userMap;
         string addISBN, addTitle, addAuthor, addYear, addPublisher, addGenre, addDescription, addMSRP, addQuantity;
         // Get values
@@ -285,18 +262,19 @@ private:
         return userMap;
     }
 
-    // Inserts values from makeUserList to vectors
+    // Inserts values from makeUserList to vector<Book> book
     void BookInventory::insertUserList(unordered_map<string, string> userMap) {
-        isbns.push_back(userMap["isbn"]);
-        titles.push_back(userMap["title"]);
-        authors.push_back(userMap["author"]);
-        years.push_back(userMap["year"]);
-        publishers.push_back(userMap["publisher"]);
-        genres.push_back(userMap["genre"]);
-        descriptions.push_back(userMap["description"]);
-        msrps.push_back(userMap["msrp"]);
-        quantities.push_back(userMap["quantity"]);
-        cout << "Data inserted successfully. " << endl;
+        Book newBook;
+        newBook.isbn = userMap["isbn"];
+        newBook.title = userMap["title"];
+        newBook.author = userMap["author"];
+        newBook.year = userMap["year"];
+        newBook.publisher = userMap["publisher"];
+        newBook.genre = userMap["genre"];
+        newBook.description = userMap["description"];
+        newBook.msrp = stod(userMap["msrp"]);
+        newBook.quantity = stoi(userMap["quantity"]);
+        books.push_back(newBook);
     }
 
     // Write csv file for User List
@@ -326,21 +304,6 @@ private:
             cout << endl;
         }
         cout << "Total items: " << userList.size() / 3 << endl;
-    }
-
-    // Validate input for ISBN, Year
-    bool BookInventory::validInput(string check, int len1, int len2) {
-        if (check.length() != len1 && check.length() != len2) {
-            cout << "Invalid input. Please try again." << endl;
-            return false;
-        }
-        for (int i = 0; i < check.length(); i++) {
-            if (isdigit(check[i]) == false) {
-                cout << "Invalid input. Please try again." << endl;
-                return false;
-            }
-        }
-        return true;
     }
 
 #endif /* BOOKINVENTORY_H_ */
