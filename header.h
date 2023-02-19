@@ -1,11 +1,12 @@
 /*
-*  Filename: bookinventory.h
-*  Created on: 02/15/2023
+*  Filename: header.h
+*  Created on: 02/08/2023
 *  Author(s): Veenkamp, Brooks, James
 */
 
 #include <iostream>
 #include <fstream>
+#include <regex>
 #include <vector>
 #include <list>
 #include <chrono>
@@ -22,15 +23,9 @@ using namespace std;
 using json = nlohmann::json;
 
 // TO DO //
-// 1) Validate ISBN, Year for makeUserList() function (see validInput() function)
-// 2) Populate field for MSRP with random values (see note in addFields() function)
-// 3) Add shoppingList functionality; must be sorted by price and written to CSV/JSON file
-        // Will likely be similar (and easier than) current user list functionality
-// 4) Create admin menu (can be added within the executeMenu() method that is already present); see assignment details
-// 5) SQLite database operations (adding, removing)
-// 6) Fix current errors denoted by ** FIX ME ** comments (scroll through to see)
-// 7) Login functionality
-// 8) Update main.cpp with new functionalities
+// 1) Create admin menu
+// 2) SQLite database operations
+// 3) Login functionality
 
 // Creation of class
 class BookInventory {
@@ -48,7 +43,7 @@ public:
 
 private:
     // Declaration of struct and vector of structs
-    struct Book {
+    typedef struct Book {
         string isbn;
         string title;
         string author;
@@ -58,7 +53,8 @@ private:
         string description;
         double msrp;
         int quantity; 
-    };
+    } Book;
+
     Book book;
     vector<Book> books;
     // Other declarations
@@ -90,6 +86,24 @@ private:
     // Displays User List
     void displayUserList(vector<string> userList);
 
+    // Validation for ISBN and Year
+    bool validISBNYear(string userTitle, int len1, int len2);
+
+    // Input validation for MSRP
+    bool validMSRP(string MSRP);
+
+    // Input validation for quantity
+    bool validQuantity(string quant);
+
+    // Functor for sorting vector<Book> by value
+    static bool compareByValue(const Book& a, const Book& b);
+
+    // Display Shopping List
+    void displayShoppingList(vector<Book> shoppingList);
+
+    // Write shopping list to csv
+    void writeShopList(vector<Book> shoppingList, string fileName);
+
 };
     // Prints menu of selections
     void BookInventory::printMenu() {
@@ -106,6 +120,8 @@ private:
         string userTitle;
         unordered_map<string, string> userMap;
         vector<string> userList;
+        vector<Book> shopBook;
+        vector<int> indices;
 
         // Retrieval of book information
         if (input == 1) {
@@ -144,12 +160,30 @@ private:
         }
         // Creating shopping list
         else if (input == 3) {
-            // FIX ME
             cout << endl;
-            cout << "To make a shopping list, please enter the titles of the books you wish to add. " << endl;
+            while (quit != 'q') {
+                cout << "Please enter a title: " << endl;
+                cin.ignore();
+                getline(cin, userTitle);
+                if (findIndexNum(userTitle) != -1) {
+                    shopBook.push_back(books[findIndexNum(userTitle)]);
+                    cout << "Book successfully added. " << endl;
+                }
+                else {
+                    cout << "Book not found. " << endl;
+                }
+                // Continue prompt
+                cout << "Would you like to add another book to your shopping list? Enter 'q' to stop or any other letter to continue. " << endl;
+                cin >> quit;
+            }
+            // Sort shopBook using functor
+            sort(shopBook.begin(), shopBook.end(), compareByValue);
+            cout << "Books added to shopping list: " << shopBook.size() << endl;
+            displayShoppingList(shopBook);
+            writeShopList(shopBook, shopListCSV);
         }
     }
-
+    
     // Sets vectors with parsed json data
     int BookInventory::setVector() {
 
@@ -234,6 +268,9 @@ private:
         cout << "ISBN to add: " << endl;
         cin.ignore();
         getline(cin, addISBN);
+        while (validISBNYear(addISBN, 13, 10) == false) {
+            getline(cin, addISBN);
+        }
         userMap["isbn"] = addISBN;
         cout << "Title to add: " << endl;
         getline(cin, addTitle);
@@ -243,6 +280,9 @@ private:
         userMap["author"] = addAuthor;
         cout << "Year to add: " << endl;
         getline(cin, addYear);
+        while (validISBNYear(addYear, 4, 4) == false) {
+            getline(cin, addYear);
+        }
         userMap["year"] = addYear;
         cout << "Publisher to add: " << endl;
         getline(cin, addPublisher);
@@ -255,9 +295,15 @@ private:
         userMap["description"] = addDescription;
         cout << "MSRP to add: " << endl;
         getline(cin, addMSRP);
+        while (validMSRP(addMSRP) == false) {
+            getline(cin, addMSRP);
+        }
         userMap["msrp"] = addMSRP;
         cout << "Quantity to add: " << endl;
         getline(cin, addQuantity);
+        while (validQuantity(addQuantity) == false) {
+            getline(cin, addQuantity);
+        }
         userMap["quantity"] = addQuantity;
         return userMap;
     }
@@ -304,6 +350,82 @@ private:
             cout << endl;
         }
         cout << "Total items: " << userList.size() / 3 << endl;
+    }
+
+    // Validation for ISBN and Year
+    bool BookInventory::validISBNYear(string userTitle, int len1, int len2) {
+        if ((userTitle.length() != len1) && (userTitle.length() != len2)) {
+            cout << "Incorrect argument length. Please try again. " << endl;
+            return false;
+        }
+        else {
+            for (int i = 0; i < userTitle.length(); i++) {
+                if (isdigit(userTitle[i]) == false) {
+                    cout << "Number expected, but other character found. Please try again. " << endl; 
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // Validate MSRP
+    bool BookInventory::validMSRP(string MSRP) {
+        // Formats
+        regex integer_expr1("[0-9][0-9]\\.[0-9][0-9]"); // 10.00
+        regex integer_expr2("[0-9][0-9][0-9]\\.[0-9][0-9]"); // 100.00
+        regex integer_expr3("[0-9]\\.[0-9][0-9]"); // 1.00
+
+        // Check if valid
+        if (regex_match(MSRP, integer_expr1) || regex_match(MSRP, integer_expr2) || regex_match(MSRP, integer_expr3)) {
+            return true;
+        }
+        else {
+            cout << "MSRPs must be written in the correct format, such as: 1.00, 10.00, or 100.00." << endl;
+            return false;
+        }
+    }
+
+    // Input validation for quantity
+    bool BookInventory::validQuantity(string quant) {
+        for (int i = 0; i < quant.length(); i++) {
+            if (isdigit(quant[i]) == false) {
+                cout << "Integer expected. Please try again. " << endl;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Functor to sort vector<Book> by msrp value
+    bool BookInventory::compareByValue(const Book& a, const Book& b) {
+        return a.msrp < b.msrp;
+    }
+
+    // Write shopping list to csv
+    void BookInventory::writeShopList(vector<Book> shoppingList, string fileName) {
+        // Open file
+        file.open(fileName, ios_base::app);
+        for (int i = 0; i < shoppingList.size(); i++) {
+            file << shoppingList[i].isbn + ",";
+            file << shoppingList[i].title + ",";
+            file << shoppingList[i].author + ",";
+            file << to_string(shoppingList[i].msrp) + ",";
+            file << endl;
+        }
+        cout << "Entry successfully written to CSV file. " << endl;
+        file.close();
+    }
+
+    void BookInventory::displayShoppingList(vector<Book> shoppingList) {
+        for (int i = 0; i < shoppingList.size(); i++) {
+            cout << endl;
+            cout << shoppingList[i].isbn << endl;
+            cout << shoppingList[i].title << endl;
+            cout << shoppingList[i].author << endl;
+            cout << shoppingList[i].msrp << endl;
+        }
     }
 
 #endif /* BOOKINVENTORY_H_ */
