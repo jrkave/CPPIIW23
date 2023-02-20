@@ -55,7 +55,7 @@ public:
     void printMenu();
     void printAdminMenu();
     void executeMenu(int input);
-    void executeAdminMenu(int input);
+    void executeAdminMenu(int adminInput);
 
 private:
     // Other declarations
@@ -116,9 +116,16 @@ private:
     }
 
     // Execute admin menu selections 
-    void BookInventory::executeAdminMenu(int input) {
-        std::cout << "TO DO: add user" << std::endl;
-        std::cout << "TO DO: change password" << std::endl;
+    void BookInventory::executeAdminMenu(int adminInput) {
+        if (adminInput == 1) {
+            std::cout << "TO DO: add user" << std::endl;
+        }
+        else if (adminInput == 2) {
+            std::cout << "TO DO: change password" << std::endl;
+        }
+        else {
+            std::cout << "Invalid input. " << std::endl;
+        }
     }
 
     // Execute menu selections
