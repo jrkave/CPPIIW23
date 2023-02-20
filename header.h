@@ -53,7 +53,9 @@ public:
 
     // Print and execute menu functions
     void printMenu();
+    void printAdminMenu();
     void executeMenu(int input);
+    void executeAdminMenu(int input);
 
 private:
     // Other declarations
@@ -103,6 +105,20 @@ private:
         std::cout << "To add books to inventory, enter 2." << std::endl;
         std::cout << "To remove books from inventory, enter 3. " << std::endl;
         std::cout << "To create a shopping list, enter 4." << std::endl;
+        std::cout << "To see the admin menu, enter 5." << std::endl;
+    }
+
+    void BookInventory::printAdminMenu() {
+        std::cout << std::endl;
+        std::cout << " ====== ADMIN MENU SELECTION ====== " << std::endl;
+        std::cout << "To add a user, enter 1. " << std::endl;
+        std::cout << "To change a password, enter 2. " << std::endl;
+    }
+
+    // Execute admin menu selections 
+    void BookInventory::executeAdminMenu(int input) {
+        std::cout << "TO DO: add user" << std::endl;
+        std::cout << "TO DO: change password" << std::endl;
     }
 
     // Execute menu selections
@@ -114,7 +130,7 @@ private:
         vector<Book> shopBook;
         vector<Book> removeBook;
 
-        // Retrieval of book information
+        // OPTION 1: Retrieval of book information
         if (input == 1) {
             std::cout << std::endl;
             while (quit != 'q') {
@@ -128,7 +144,7 @@ private:
                 cin >> quit;
             }
         }
-        // Adding books to user list
+        // OPTION 2: Adding books to inventory
         else if (input == 2) {
             std::cout << std::endl;
             std::cout << "To add a book, we will need some additional information. Please enter the following, keeping in mind that ISBNs must be a 10 or 13-digit number and years must be a 4-digit number. " << std::endl;
@@ -157,6 +173,7 @@ private:
             std::cout << "List of books added: " << std::endl;
             displayUserList(userList);
         }
+        // OPTION 3: Remove books from inventory
         else if (input == 3) {
             std::cout << std::endl;
             while (quit != 'q') {
@@ -198,7 +215,7 @@ private:
             writeList(removeBook, removeListCSV);
             displayList(removeBook);
         }
-        // Creating shopping list
+        // OPTION 4: Creating shopping list
         else if (input == 4) {
             std::cout << std::endl;
             while (quit != 'q') {
@@ -221,6 +238,13 @@ private:
             std::cout << "Books added to shopping list: " << shopBook.size() << std::endl;
             displayList(shopBook);
             writeList(shopBook, shopListCSV);
+        }
+        // OPTION 5: Admin Menu
+        else if (input == 5) {
+            printAdminMenu();
+            int adminInput;
+            cin >> adminInput;
+            executeAdminMenu(adminInput);
         }
     }
     

@@ -14,7 +14,7 @@ int main() {
     BookInventory book;
     book.printMenu();
     cin >> selection;
-    while (selection != 1 && selection != 2 && selection != 3 && selection != 4) {
+    while (selection != 1 && selection != 2 && selection != 3 && selection != 4 && selection != 5) {
         cout << "Invalid selection. Please try again. " << endl;
         cin >> selection;
     }
