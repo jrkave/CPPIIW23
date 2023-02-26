@@ -15,6 +15,7 @@
 #include <algorithm>
 #include "json.hpp"
 #include "sqlite3.h"
+#include "md5.h"
 
 #ifndef HEADER_H_
 #define HEADER_H_
@@ -22,15 +23,7 @@
 using namespace std;
 using json = nlohmann::json;
 
-// TO DO //
-// 1) Create admin menu
-// 2) SQLite database operations
-// 3) Login functionality
-
-// Creation of class
-class BookInventory {
-public:
-    // Setup of struct
+// Setup of struct
     typedef struct Book {
         string isbn;
         string title;
@@ -42,7 +35,28 @@ public:
         double msrp;
         int quantity; 
     } Book;
+
+// Hold username and password
+    struct User {
+    	string username;
+    	string password;
+    };
+
+// Sales receipt
+    typedef struct Receipt {
+        string purchasedBook = "Unavailable";
+        int amount = 0;
+        double msrp = 0.0;
+        double tax = 0.0;
+        double total = 0.0;
+    } Receipt;
+
+// Creation of class
+class BookInventory {
+public:
     // Declaration of variables
+    Receipt receipt;
+    vector<Receipt> receipts;
     Book book;
     vector<Book> books;
 
@@ -66,6 +80,7 @@ private:
     string shopListCSV = "shoppingList.csv";
     string removeListCSV = "removeList.csv";
     string jsonFile = "book.json";
+    string CSVfilename = "login.csv";
     
     // Initializes vector<Book> with JSON data
     int setVector();
@@ -82,9 +97,9 @@ private:
     void writeUserList(unordered_map<string, string> userMap, string fileName); // writes user list to CSV file
     void displayUserList(vector<string> userList); // displays user list
 
-    // Shopping List Functions
+    // Shopping  and Remove List Functions
     static bool compareByValue(const Book& a, const Book& b); // functor to sort vector<Book> by MSRP value
-    void writeList(vector<Book> list, string fileName); // writes shopping list to CSV file
+    void writeList(vector<Book> list, string fileName); // writes shopping / removed lists to CSV file
     void displayList(vector<Book> list); // displays list of books in vector<Book> (also used for removing books)
 
     // Input validation Functions
@@ -96,6 +111,17 @@ private:
     int removeData(sqlite3 *db, const char *title);
     int addData(sqlite3 *db, const char *isbn, const char *title, const char *author, const char *year, const char *publisher, const char *genre, const char *description, double msrp, int quantity);
 
+    // Admin menu functions
+    void addNewUser(string username, string password);
+    void changeUserPassword(string username, string password);
+
+    // Purchasing / shopper functions
+    int addShopper(sqlite3 *db, const char *name, const char *email);
+    bool doesShopperExist(sqlite3 *db, const char *name);
+    Receipt purchaseBooks(string title);
+    void displayReceipt(Receipt receipt);
+    int addShopperTotal(sqlite3 *db, const char *name, double total);
+
 };
     // Prints menu of selections
     void BookInventory::printMenu() {
@@ -106,6 +132,7 @@ private:
         std::cout << "To remove books from inventory, enter 3. " << std::endl;
         std::cout << "To create a shopping list, enter 4." << std::endl;
         std::cout << "To see the admin menu, enter 5." << std::endl;
+        std::cout << "To purchase a book, enter 6." << std::endl;
     }
 
     void BookInventory::printAdminMenu() {
@@ -117,11 +144,24 @@ private:
 
     // Execute admin menu selections 
     void BookInventory::executeAdminMenu(int adminInput) {
+    	// Declarations
+    	string username, password;
+    	// Option 1: Add new user to login.csv
         if (adminInput == 1) {
-            std::cout << "TO DO: add user" << std::endl;
+            std::cout << "Please enter username for new user:" << std::endl;
+            std::cin >> username;
+            std::cout << "Please enter password for new user:" << std::endl;
+            std::cin >> password;
+            addNewUser(username, password);
+
         }
+        // Option 2: Change password of existing account
         else if (adminInput == 2) {
-            std::cout << "TO DO: change password" << std::endl;
+        	std::cout << "Enter username associated with password to be changed: " << std::endl;
+        	std::cin >> username;
+        	std::cout << "Enter new password: " << std::endl;
+        	std::cin >> password;
+        	changeUserPassword(username, password);
         }
         else {
             std::cout << "Invalid input. " << std::endl;
@@ -136,6 +176,13 @@ private:
         vector<string> userList;
         vector<Book> shopBook;
         vector<Book> removeBook;
+
+        // Open databasse
+        sqlite3 *db;
+        int rc = sqlite3_open("books.db", &db);
+        if (rc != SQLITE_OK) {
+            cout << "Error opening database: " << sqlite3_errmsg(db) << endl;
+        }
 
         // OPTION 1: Retrieval of book information
         if (input == 1) {
@@ -163,12 +210,7 @@ private:
                 userList.push_back(userMap["isbn"]);
                 userList.push_back(userMap["title"]);
                 userList.push_back(userMap["author"]);
-                // Open database
-                sqlite3 *db;
-                int rc = sqlite3_open("books.db", &db);
-                if (rc != SQLITE_OK) {
-                    cout << "Error opening database: " << sqlite3_errmsg(db) << endl;
-                }
+
                 insertUserList(userMap, db); // adds book to vector<Book> and database
                 writeUserList(userMap, userListCSV); // writes to CSV
                 // Continue prompt
@@ -189,12 +231,6 @@ private:
                 std::getline(cin, userTitle);
                 int index = findIndexNum(userTitle);
                 if (index != -1) {
-                    // Open database
-                    sqlite3 *db;
-                    int rc = sqlite3_open("books.db", &db);
-                    if (rc != SQLITE_OK) {
-                        cout << "Error opening database: " << sqlite3_errmsg(db) << endl;
-                    }
                     // If element is at back of books, pop back
                     if (index == books.size() - 1) {
                         removeBook.push_back(books[index]); // add to vector of removed books
@@ -253,6 +289,103 @@ private:
             cin >> adminInput;
             executeAdminMenu(adminInput);
         }
+        // OPTION 6: Purchase Book
+        else if (input == 6) {
+            Receipt receipt;
+            vector<Receipt> receipts;
+            string title;
+            string name;
+            string email;
+            string modEmail;
+            double total = 0.0;
+
+            // Get name, emails
+            std::cout << "Please enter your full name: " << std::endl;
+            cin.ignore();
+            getline(cin, name);
+            std::cout << "Please enter your email: " << std::endl;
+            cin >> email;
+            addShopper(db, name.c_str(), email.c_str()); // add shopper to database
+
+            // Purchase books
+            while (quit != 'q') {
+                std::cout << "Please enter the title of the book you'd like to purchase. " << std::endl;
+                cin.ignore();
+                getline(cin, title);
+                receipt = purchaseBooks(title);
+                receipts.push_back(receipt);
+                // Continue prompt
+                std::cout << "Would you like to purchase another book? Enter 'q' to stop or any other letter to continue. " << std::endl;
+                cin >> quit;
+            }
+            std::cout << std::endl;
+            std::cout << " === SALES RECEIPT ===" << std::endl;
+            std::cout << std::endl;
+            std::cout << "Customer: " << name << std::endl;
+            std::cout << "Email: " << email << std::endl;
+            std::cout << std::endl;
+            for (int i = 0; i < receipts.size(); i++) {
+                if (receipts[i].purchasedBook == "Unavailable") {
+                    continue;
+                }
+                else {
+                    displayReceipt(receipts[i]);
+                    std::cout << std::endl;
+                    total += receipts[i].total;
+                }
+            }
+            
+            total = round(total * 100) / 100.0;
+            std::cout << "TOTAL: $" << total << std::endl;
+            addShopperTotal(db, name.c_str(), total);
+        }
+    }
+    
+    // Parse login CSV line into User struct
+    User parseUser(string line) {
+    	User user;
+    	size_t pos = 0;
+    	string token;
+    	int i = 0;
+    	while ((pos = line.find(",")) != string::npos) {
+    		token = line.substr(0, pos);
+    		if (i == 0) {
+    			user.username = token;
+    		}
+    		else {
+    			user.password = token;
+    		}
+    		line.erase(0, pos + 1);
+    		i++;
+    	}
+    	if (i == 1) {
+    		user.password = line;
+    	}
+    	return user;
+    }
+
+    // Read login CSV into vector
+    vector<User> readCSV(string filename) {
+    	vector<User> users;
+    	ifstream file(filename);
+    	if (file) {
+    		string line;
+    		while (getline(file, line)) {
+    			User user = parseUser(line);
+    			users.push_back(user);
+    		}
+    		file.close();
+    	}
+    	return users;
+    }
+    void writeCSV(string filename, vector<User> users) {
+    	ofstream file(filename);
+    	if (file) {
+    		for (int i=0; i < users.size(); i++) {
+    			file << users[i].username << "," << users[i].password << endl;
+    		}
+    		file.close();
+    	}
     }
     
     // Sets vectors with parsed json data
@@ -286,7 +419,7 @@ private:
                 book.publisher = bookList["publisher"];
                 book.genre = "NULL";
                 book.description = "NULL";
-                int randQuant = rand() % 101;
+                int randQuant = rand() % (56 - 2 + 1) + 2;
                 book.quantity = randQuant;
                 double randMSRP = (103.97 - 34.99) * ((double)rand() / (double)RAND_MAX) + 34.99;
                 book.msrp = randMSRP;
@@ -441,6 +574,7 @@ private:
             file << to_string(list[i].msrp) + ",";
             file << std::endl;
         }
+        std::cout << std::endl; 
         std::cout << "Entry successfully written to CSV file. " << std::endl;
         file.close();
     }
@@ -564,6 +698,189 @@ private:
         // Finalize the statement
         sqlite3_finalize(stmt);
         return 0;
+    }
+
+    // Add new user to login.csv from admin menu
+    void BookInventory::addNewUser(string username, string password) {
+    	string encryptedPassword;
+    	ofstream myFile;
+    	// Open csv file
+    	myFile.open(CSVfilename, ios_base::app);
+    	// Exception handling
+    	if(!myFile.is_open()){
+    		cerr << "Failed to open file " << CSVfilename << endl;
+    		return;
+    	}
+    	// Encrypt user entered password with md5
+    	encryptedPassword = md5(password);
+    	// Write username and password delimited by comma to login.csv
+    	myFile << username << "," << encryptedPassword << endl;
+    	myFile.close();
+    	cout << "User: " << username << " added successfully." << endl;
+    }
+
+    // Change password of for existing account
+    void BookInventory::changeUserPassword(string username, string password) {
+    	string filename = "login.csv";
+    	vector<User> users = readCSV(filename);
+
+    	bool found = false;
+    	for (int i = 0; i < users.size(); i++) {
+    		if (users[i].username == username) {
+    			cout << "Enter new password: ";
+    			string password;
+    			cin >> password;
+    			users[i].password = md5(password);
+    			found = true;
+    			break;
+    		}
+    	}
+    	if (!found) {
+    		cout << "Incorrect username or password." << endl;
+    	}
+    	else {
+    		writeCSV(filename, users);
+    		cout << "Password changed." << endl;
+    	}
+    }
+
+    // Add shopper to database
+    int BookInventory::addShopper(sqlite3 *db, const char *name, const char *email) {
+        // Use placeholders in the query string
+        string query = "INSERT INTO SHOPPERS (NAME, EMAIL) VALUES (?, ?)";
+        sqlite3_stmt *stmt;
+
+        // Prepare the statement
+        int rc = sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, NULL);
+        if (rc != SQLITE_OK) {
+            std::cout << "Error preparing statement: " << sqlite3_errmsg(db) << std::endl;
+        return -1;
+        }
+
+        // Bind the parameters with the correct data types
+        sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, email, -1, SQLITE_STATIC);
+        
+        // Execute the statement
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
+            std::cout << "Shopper was not able to be added. " << std::endl;
+            return -1;
+        }
+        std::cout << "Shopper successfully added to database. " << std::endl;
+
+        // Finalize the statement
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+/*
+    bool BookInventory::doesShopperExist(sqlite3* db, const char* email) {
+        // Prepare the SQL statement with a parameter placeholder
+        const char* sql = "SELECT * FROM SHOPPERS WHERE NAME = ?";
+        sqlite3_stmt* stmt;
+        int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+            return false;
+        }
+
+        // Bind the name parameter to the statement
+        rc = sqlite3_bind_text(stmt, 1, email, -1, SQLITE_TRANSIENT);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(stmt);
+            return false;
+        }
+
+        // Execute the statement and check if any rows were returned
+        bool result = false;
+        rc = sqlite3_step(stmt);
+        if (rc == SQLITE_ROW) {
+            result = true;
+        } else if (rc != SQLITE_DONE) {
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+        }
+
+        // Finalize the statement and return the result
+        sqlite3_finalize(stmt);
+        return result;
+    }
+*/
+
+    Receipt BookInventory::purchaseBooks(string title) {
+        int amount = 0;
+        int index = findIndexNum(title);
+        Receipt receipt;
+        if (index == -1) {
+            std::cout << "Book not found. " << std::endl;
+            return receipt;
+        }
+        else {
+            std::cout << "Enter amount of books to be purchased: " << std::endl;
+            cin >> amount;
+            while ((books[index].quantity - amount) < 0) {
+                std::cout << "Oops! We only have " << books[index].quantity << " copies available. Please enter a different amount." << std::endl;
+                cin >> amount;
+            }
+            // Remove quantity from books
+            books[index].quantity -= amount;
+            // TO DO: Remove quantity from database
+
+            // Add to receipt
+            receipt.purchasedBook = title;
+            receipt.amount = amount;
+            receipt.msrp = books[index].msrp;
+            double tax = books[index].msrp * amount * 0.06;
+            receipt.tax = tax;
+            receipt.total = books[index].msrp * amount + tax;
+            return receipt;
+        }
+    }
+
+    void BookInventory::displayReceipt(Receipt receipt) {
+        std::cout << "Book: " << receipt.purchasedBook << std::endl;
+        std::cout << "Quantity: " << receipt.amount << std::endl;
+        std::cout << "MRSP: " << receipt.msrp << std::endl;
+        std::cout << "Tax: " << receipt.tax << std::endl;
+        std::cout << "Total: " << receipt.total << std::endl;
+    }
+
+    int BookInventory::addShopperTotal(sqlite3 *db, const char *name, double total) {
+    // Prepare the SQL statement with parameter placeholders
+        const char* sql = "UPDATE SHOPPERS SET TOTAL = ? WHERE NAME = ?";
+        sqlite3_stmt* stmt;
+        int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+            return rc;
+        }
+
+        // Bind the total and name parameters to the statement
+        rc = sqlite3_bind_double(stmt, 1, total);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(stmt);
+            return rc;
+        }
+        rc = sqlite3_bind_text(stmt, 2, name, -1, SQLITE_TRANSIENT);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(stmt);
+            return rc;
+        }
+
+        // Execute the statement and finalize it
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE) {
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(stmt);
+            return rc;
+        }
+        sqlite3_finalize(stmt);
+
+        // Return the number of rows affected (should be 1)
+        return sqlite3_changes(db);
     }
 
 #endif /* HEADER_H_ */
