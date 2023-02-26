@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 #include <cctype>
+#include "md5.h"
 
 #ifndef LOGIN_H_
 #define LOGIN_H_
@@ -30,7 +31,7 @@ public:
     }
 
 private:
-    string username, password, plainPassword, encryptedPassword;
+    string username, password, encryptedPassword;
     char ch;
     string user;
     string CSVfilename = "login.csv";
@@ -53,15 +54,9 @@ private:
 		    cerr << "Failed to open file " << CSVfilename << endl;
 		    return;
 	    }
-	    plainPassword = password;
-	    for(int i =0; i < plainPassword.length(); i++) {
-	    	ch = plainPassword.at(i);
-	    	int a = (int) ch;
-	    	string b = to_string(a);
-	    	encryptedPassword.append(b);
-	    }
+	    encryptedPassword = md5(password);
 	    // Write username and password delimited by comma
-	    myFile << encryptedPassword << "," << encryptedPassword << endl;
+	    myFile << username << "," << encryptedPassword << endl;
 	    myFile.close();
 
 	    cout << "Thank you for creating an account with us, "  << username << "." << endl;
@@ -81,12 +76,8 @@ private:
             string storedUsername = line.substr(0, delimiterPos);
             string storedPassword = line.substr(delimiterPos + 1);
             //Run input password through encryption
-    	    for(int i =0; i < password.length(); i++) {
-    	    	ch = password.at(i);
-    	    	int a = (int) ch;
-    	    	string b = to_string(a);
-    	    	encryptedPassword.append(b);
-    	    }
+    	    encryptedPassword = md5(password);
+	    //Compare username and encrypted password to password in login.csv
             if (username == storedUsername && encryptedPassword == storedPassword) {
                 file.close();
                 cout << "Welcome back, " << username << "." << endl;
