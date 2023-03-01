@@ -15,7 +15,7 @@
 #include <algorithm>
 #include "json.hpp"
 #include "sqlite3.h"
-#include "md5.h"
+#include "login.h"
 
 #ifndef HEADER_H_
 #define HEADER_H_
@@ -111,7 +111,6 @@ private:
     int removeData(sqlite3 *db, const char *title);
     int addData(sqlite3 *db, const char *isbn, const char *title, const char *author, const char *year, const char *publisher, const char *genre, const char *description, double msrp, int quantity);
 
-<<<<<<< HEAD
     // Admin menu functions
     void addNewUser(string username, string password);
     void changeUserPassword(string username, string password);
@@ -123,11 +122,6 @@ private:
     void displayReceipt(Receipt receipt);
     int addShopperTotal(sqlite3 *db, const char *name, double total);
 
-=======
-    //Admin menu functions
-    void addNewUser(string username, string password);
-    void changeUserPassword(string username, string password);
->>>>>>> b34ffefd0339cc0b6934cb8eb9be7713e5fb0553
 };
     // Prints menu of selections
     void BookInventory::printMenu() {
@@ -150,15 +144,9 @@ private:
 
     // Execute admin menu selections 
     void BookInventory::executeAdminMenu(int adminInput) {
-<<<<<<< HEAD
     	// Declarations
     	string username, password;
     	// Option 1: Add new user to login.csv
-=======
-    	//Declarations
-    	string username, password;
-    	//Option 1: Add new user to login.csv
->>>>>>> b34ffefd0339cc0b6934cb8eb9be7713e5fb0553
         if (adminInput == 1) {
             std::cout << "Please enter username for new user:" << std::endl;
             std::cin >> username;
@@ -167,11 +155,7 @@ private:
             addNewUser(username, password);
 
         }
-<<<<<<< HEAD
         // Option 2: Change password of existing account
-=======
-        //Option 2: Change password of existing account
->>>>>>> b34ffefd0339cc0b6934cb8eb9be7713e5fb0553
         else if (adminInput == 2) {
         	std::cout << "Enter username associated with password to be changed: " << std::endl;
         	std::cin >> username;
@@ -350,7 +334,7 @@ private:
                     total += receipts[i].total;
                 }
             }
-            
+
             total = round(total * 100) / 100.0;
             std::cout << "TOTAL: $" << total << std::endl;
             addShopperTotal(db, name.c_str(), total);
@@ -381,58 +365,6 @@ private:
     }
 
     // Read login CSV into vector
-    vector<User> readCSV(string filename) {
-    	vector<User> users;
-    	ifstream file(filename);
-    	if (file) {
-    		string line;
-    		while (getline(file, line)) {
-    			User user = parseUser(line);
-    			users.push_back(user);
-    		}
-    		file.close();
-    	}
-    	return users;
-    }
-    void writeCSV(string filename, vector<User> users) {
-    	ofstream file(filename);
-    	if (file) {
-    		for (int i=0; i < users.size(); i++) {
-    			file << users[i].username << "," << users[i].password << endl;
-    		}
-    		file.close();
-    	}
-    }
-    
-    //Hold username and password
-    struct User {
-    	string username;
-    	string password;
-    };
-    //Parse login CSV line into User struct
-    User parseUser(string line) {
-    	User user;
-    	size_t pos = 0;
-    	string token;
-    	int i = 0;
-    	while ((pos = line.find(",")) != string::npos) {
-    		token = line.substr(0, pos);
-    		if (i == 0) {
-    			user.username = token;
-    		}
-    		else {
-    			user.password = token;
-    		}
-    		line.erase(0, pos + 1);
-    		i++;
-    	}
-    	if (i == 1) {
-    		user.password = line;
-    	}
-    	return user;
-    }
-
-    //Read login CSV into vector
     vector<User> readCSV(string filename) {
     	vector<User> users;
     	ifstream file(filename);
@@ -768,11 +700,7 @@ private:
         return 0;
     }
 
-<<<<<<< HEAD
     // Add new user to login.csv from admin menu
-=======
-    //Add new user to login.csv from admin menu
->>>>>>> b34ffefd0339cc0b6934cb8eb9be7713e5fb0553
     void BookInventory::addNewUser(string username, string password) {
     	string encryptedPassword;
     	ofstream myFile;
@@ -783,11 +711,7 @@ private:
     		cerr << "Failed to open file " << CSVfilename << endl;
     		return;
     	}
-<<<<<<< HEAD
     	// Encrypt user entered password with md5
-=======
-    	//Encrypt user entered password with md5
->>>>>>> b34ffefd0339cc0b6934cb8eb9be7713e5fb0553
     	encryptedPassword = md5(password);
     	// Write username and password delimited by comma to login.csv
     	myFile << username << "," << encryptedPassword << endl;
@@ -795,11 +719,7 @@ private:
     	cout << "User: " << username << " added successfully." << endl;
     }
 
-<<<<<<< HEAD
     // Change password of for existing account
-=======
-    //Change password of for existing account
->>>>>>> b34ffefd0339cc0b6934cb8eb9be7713e5fb0553
     void BookInventory::changeUserPassword(string username, string password) {
     	string filename = "login.csv";
     	vector<User> users = readCSV(filename);
@@ -824,7 +744,6 @@ private:
     	}
     }
 
-<<<<<<< HEAD
     // Add shopper to database
     int BookInventory::addShopper(sqlite3 *db, const char *name, const char *email) {
         // Use placeholders in the query string
@@ -965,6 +884,3 @@ private:
     }
 
 #endif /* HEADER_H_ */
-=======
-#endif /* HEADER_H_ */
->>>>>>> b34ffefd0339cc0b6934cb8eb9be7713e5fb0553
