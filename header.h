@@ -122,6 +122,9 @@ private:
     void displayReceipt(Receipt receipt);
     int addShopperTotal(sqlite3 *db, const char *name, double total);
 
+    // Adding deals
+    bool hasValidCoupon(string coupon);
+
 };
     // Prints menu of selections
     void BookInventory::printMenu() {
@@ -298,6 +301,9 @@ private:
             string email;
             string modEmail;
             double total = 0.0;
+            char couponChoice = 'k';
+            string coupon;
+            bool validCoupon;
 
             // Get name, emails
             std::cout << "Please enter your full name: " << std::endl;
@@ -318,6 +324,27 @@ private:
                 std::cout << "Would you like to purchase another book? Enter 'q' to stop or any other letter to continue. " << std::endl;
                 cin >> quit;
             }
+            // Coupon code 
+            std::cout << "Do you have a coupon code? Enter y/n." << std::endl;
+            std::cin >> couponChoice;
+            while (couponChoice != 'y' && couponChoice != 'n') {
+                std::cout << "Invalid entry. Please enter y for yes, n for no." << std::endl;
+                std::cin >> couponChoice;
+            }
+            // Apply coupon or not
+            if (couponChoice == 'y') {
+                std::cout << "Please enter your code: " << std::endl;
+                std::cin >> coupon;
+                validCoupon = hasValidCoupon(coupon);
+                if (validCoupon == false) {
+                    std::cout << "Sorry, that is not a valid coupon code." << std::endl;
+                }
+                else {
+                    std::cout << "Your coupon has been applied." << std::endl;
+                }
+            }
+
+            // Sales receipt
             std::cout << std::endl;
             std::cout << " === SALES RECEIPT ===" << std::endl;
             std::cout << std::endl;
@@ -335,9 +362,17 @@ private:
                 }
             }
 
-            total = round(total * 100) / 100.0;
-            std::cout << "TOTAL: $" << total << std::endl;
-            addShopperTotal(db, name.c_str(), total);
+            // Add coupon discount if they had one
+            if (validCoupon == true) {
+                total = round((total * 0.8) * 100) / 100.0;
+                std::cout << "TOTAL WITH COUPON: $" << total << std::endl;
+                addShopperTotal(db, name.c_str(), total);
+            }
+            else {
+                total = round(total * 100) / 100.0;
+                std::cout << "TOTAL: $" << total << std::endl; 
+                addShopperTotal(db, name.c_str(), total);
+            }
         }
     }
     
@@ -881,6 +916,25 @@ private:
 
         // Return the number of rows affected (should be 1)
         return sqlite3_changes(db);
+    }
+
+    // Coupon codes
+    bool BookInventory::hasValidCoupon(string coupon) {
+        coupon += ",";
+        string line;
+        ifstream file("coupon.csv");
+        // Exception handling
+        if (!file.is_open()) {
+            cerr << "Failed to open file: coupon.csv" << endl;
+        }
+        // Search for coupon code
+        while (getline(file, line)) {
+            if (line == coupon) {
+                return true;
+            }
+        }
+        file.close();
+        return false;
     }
 
 #endif /* HEADER_H_ */
